@@ -1,5 +1,6 @@
 package gui;
 
+import sys.DataManager;
 import sys.Messages;
 
 /**
@@ -13,5 +14,12 @@ public class App {
 
         AppFrame appFrame = new AppFrame();
         appFrame.setVisible(true);
+
+        DataManager dataManager = new DataManager();
+        try {
+            dataManager.testSettings();
+        } catch (Exception e) {
+            System.out.println("Failed to find driver: " + e.getMessage());
+        }
     }
 }

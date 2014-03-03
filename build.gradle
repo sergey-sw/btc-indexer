@@ -1,11 +1,20 @@
 allprojects {
-	ext.vcs ='svn'
+	vcs ='svn'
+    artifactGroup = 'com.project.btc'
+    version = '1.0'
+}
+
+repositories {
+    mavenCentral()
 }
 
 apply(plugin: 'idea')
+apply(plugin: 'maven')
 
-configure(this) {
+configure(rootProject) {
 	apply plugin : 'java'
+    apply plugin : 'idea'
+    apply plugin :  'maven'
 
 	sourceSets {
         main {
@@ -14,6 +23,8 @@ configure(this) {
             }
         }
     }
-	
-	
+
+    dependencies {
+        compile 'postgresql:postgresql:9.0-801.jdbc4'
+    }
 }

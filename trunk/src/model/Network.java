@@ -213,7 +213,7 @@ public class Network {
 
     // C-means
     public void fuzzyTeaching(int studyDataArrayLength) {
-        // Инициализация коэф-ов принадлежности
+        // init belong coefficients
         fuzzyInitBelongs(studyDataArrayLength);
 
         int fuzzyCount = inputsMLP.length;

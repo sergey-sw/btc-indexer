@@ -2,6 +2,7 @@ package gui;
 
 import sys.DataManager;
 import sys.Messages;
+import sys.WebDataLoader;
 
 /**
  * Author: Sergey42
@@ -21,5 +22,8 @@ public class App {
         } catch (Exception e) {
             System.out.println("Failed to find driver: " + e.getMessage());
         }
+
+        WebDataLoader webDataLoader = new WebDataLoader();
+        webDataLoader.loadCoinDeskIndexes("2014-01-01", "2014-02-01");
     }
 }

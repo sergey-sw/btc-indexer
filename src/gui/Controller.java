@@ -1,7 +1,7 @@
 package gui;
 
 import model.ActivationFunctionType;
-import model.Neuron;
+import model.DemoValuesBuilder;
 
 /**
  * Author: Sergey42
@@ -46,9 +46,9 @@ public class Controller {
         }
 
 
-        Neuron.sigma = demoCoeff;
-        double[] functionValues = Neuron.getActivationFunctionDemoValues(xmin, xmax, n, activationFunctionTypeDemo);
-        double[] derivateData = Neuron.getActivationFunctionDerivationDemoValues(xmin, xmax, n, activationFunctionTypeDemo);
+        DemoValuesBuilder.sigma = demoCoeff;
+        double[] functionValues = DemoValuesBuilder.getActivationFunctionDemoValues(xmin, xmax, n, activationFunctionTypeDemo);
+        double[] derivateData = DemoValuesBuilder.getActivationFunctionDerivationDemoValues(xmin, xmax, n, activationFunctionTypeDemo);
 
         Object datas = new Object[]{xmin, xmax, n};
 

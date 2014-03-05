@@ -4,7 +4,7 @@ package model;
  * Author: Sergey42
  * Date: 14.02.14 23:22
  */
-public class Neuron {
+public class DemoValuesBuilder {
 
     public static double sigma = 1;
 

@@ -3,7 +3,6 @@ package gui;
 import model.ActivationFunctionType;
 import model.Network;
 import model.NetworkCreator;
-import model.Neuron;
 
 /**
  * Author: Sergey42
@@ -44,7 +43,7 @@ public class Model {
         network.initNormalizedData();
     }
 
-    public double[] forecast(int count)    {
+    public double[] forecast(int count) {
         return network.fuzzyForecast(count);
     }
 }

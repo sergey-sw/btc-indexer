@@ -13,7 +13,7 @@ public class DataManager {
     public void testSettings() throws Exception {
         Class.forName("org.postgresql.Driver");
 
-        Connection connection = null;
+        Connection connection;
 
         try {
             connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/btc", "root", "root");

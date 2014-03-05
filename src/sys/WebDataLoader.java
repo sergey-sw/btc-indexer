@@ -26,11 +26,12 @@ public class WebDataLoader {
      *
      * @param startDate start date in yyyy-MM-dd format
      * @param endDate   end date in yyyy-MM-dd
+     * @param mode      TRUE for OHLC, FALSE for closing price
      */
-    public List<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate) {
-        String urlPattern = "http://api.coindesk.com/charts/data?output=csv&data=close&startdate=%s&enddate=%s&exchanges=bpi";
+    public List<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, boolean mode) {
+        String urlPattern = "http://api.coindesk.com/charts/data?output=csv&data=%s&startdate=%s&enddate=%s&exchanges=bpi";
 
-        String url = String.format(urlPattern, startDate, endDate);
+        String url = String.format(urlPattern, mode == IndexSnapshot.OHLC ? "ohlc" : "close", startDate, endDate);
 
         try {
             HttpGet httpGet = new HttpGet(url);
@@ -46,10 +47,21 @@ public class WebDataLoader {
             List<IndexSnapshot> indexSnapshots = new ArrayList<>(lines.size());
             for (int i = 1; i < lines.size() - 3; i++) {
                 String line = (String) lines.get(i);
-                String dateStr = line.substring(1, 11);
-                String valueStr = line.substring(22);
 
-                IndexSnapshot indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr), Double.valueOf(valueStr));
+                IndexSnapshot indexSnapshot;
+                if (mode == IndexSnapshot.CLOSING_PRICE) {
+                    String dateStr = line.substring(1, 11);
+                    String valueStr = line.substring(22);
+
+                    indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr), Double.valueOf(valueStr));
+                } else {
+                    String dateStr = line.substring(1, 11);
+                    String valuesStr = line.substring(22);
+                    String[] ohlc = valuesStr.split(",");
+
+                    indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr),
+                            Double.valueOf(ohlc[0]), Double.valueOf(ohlc[1]), Double.valueOf(ohlc[2]), Double.valueOf(ohlc[3]));
+                }
                 indexSnapshots.add(indexSnapshot);
             }
 

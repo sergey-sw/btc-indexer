@@ -6,7 +6,7 @@ import java.util.Random;
  * Author: Sergey42
  * Date: 14.02.14 21:45
  */
-public class Network {
+public class Network implements NetworkAPI {
 
     public double[] inputs;
     public int studyLength;
@@ -212,6 +212,7 @@ public class Network {
     }
 
     // C-means
+    @Override
     public void fuzzyTeaching(int studyDataArrayLength) {
         // init belong coefficients
         fuzzyInitBelongs(studyDataArrayLength);
@@ -354,6 +355,7 @@ public class Network {
         }
     }
 
+    @Override
     public void fuzzyTeaching2(int era) {
         int iteration = 0; // Номер итерации алгоритма
         int inputLayerNeuronCount = inputsMLP.length; // кол-во нейронов входного слоя
@@ -402,6 +404,7 @@ public class Network {
         }
     }
 
+    @Override
     public double[] fuzzyForecast(int forecastSize) {
         initForecastData();
 
@@ -473,10 +476,10 @@ public class Network {
 
         fullLength += forecastInputs.length;
 
-        initNormalizedData();
+        //initNormalizedData();
     }
 
-    public void initNormalizedData() {
+    private void initNormalizedData() {
         nInputs = new double[inputs.length];
         for (int i = 0; i < nInputs.length; i++) {
             nInputs[i] = normalize(inputs[i]);
@@ -495,27 +498,13 @@ public class Network {
         averageDiffPerEraHistory = new double[teachCycleCount];
     }
 
-    public void initInputData(int inputDataArrayLength) {
-        inputs = new double[inputDataArrayLength];
-        fullLength = inputDataArrayLength;
-
-
-        double[] minT = new double[inputDataArrayLength];
-        double[] maxT = new double[inputDataArrayLength]; //TODO
-
-
-        inputs = new double[maxT.length];
-        fullLength = inputs.length;
-
-        double _normalizeCoeff = 0.0;
-
-        for (int i = 0; i < inputs.length; i++) {
-            double temp = inputs[i] = (maxT[i] + minT[i]) / 2;
-            _normalizeCoeff += temp * temp;
-        }
+    public void initInputData(double[] data) {
+        inputs = data;
+        fullLength = data.length;
 
         maxValue = MathUtils.findMax(inputs);
         minValue = MathUtils.findMin(inputs);
-        _normalizeCoeff = Math.sqrt(_normalizeCoeff);
+
+        initNormalizedData();
     }
 }

@@ -21,26 +21,14 @@ public class Model {
         network = NetworkCreator.create(structure, activationFunctionTypes, parameters);
     }
 
-    public void teachNetwork(int inputDataArrayLength) {
-        network.initInputData(inputDataArrayLength);
-        network.initNormalizedData();
+    public void teachNetwork() {
         network.initDifferenceHistory();
 
-        inputDataArrayLength = network.nInputs.length;
-
-
-        network.studyLength = inputDataArrayLength;
-
-        network.fuzzyTeaching(inputDataArrayLength);
+        //network.fuzzyTeaching();
         for (int era = 0; era < network.teachCycleCount; era++) {
             network.fuzzyTeaching2(era);
             controller.onTeachIterationPerformed(era);
         }
-    }
-
-    public void initInputData(int inputDataArrayLength) {
-        network.initInputData(inputDataArrayLength);
-        network.initNormalizedData();
     }
 
     public double[] forecast(int count) {

@@ -106,7 +106,7 @@ public class Controller {
 
         model.network.speedRate = speedRate;
 
-        model.teachNetwork(studyDataSize);
+        //model.teachNetwork(studyDataSize);
 
         double[] averageMistakeData = model.network.averageDiffPerEraHistory;
         view.drawAverageMistake(averageMistakeData);
@@ -139,7 +139,7 @@ public class Controller {
 
         int inputDataArrayLength = (Integer) data[1];
 
-        model.initInputData(inputDataArrayLength);
+        //model.initInputData(inputDataArrayLength);
 
 
         view.drawInputFunction(model.network.inputs);

@@ -1,6 +1,7 @@
 package sys;
 
 import model.IndexSnapshot;
+import model.SnapshotMode;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -28,10 +29,10 @@ public class WebDataLoader {
      * @param endDate   end date in yyyy-MM-dd
      * @param mode      TRUE for OHLC, FALSE for closing price
      */
-    public List<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, boolean mode) {
+    public List<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode) {
         String urlPattern = "http://api.coindesk.com/charts/data?output=csv&data=%s&startdate=%s&enddate=%s&exchanges=bpi";
 
-        String url = String.format(urlPattern, mode == IndexSnapshot.OHLC ? "ohlc" : "close", startDate, endDate);
+        String url = String.format(urlPattern, mode == SnapshotMode.OHLC ? "ohlc" : "close", startDate, endDate);
 
         try {
             HttpGet httpGet = new HttpGet(url);
@@ -49,7 +50,7 @@ public class WebDataLoader {
                 String line = (String) lines.get(i);
 
                 IndexSnapshot indexSnapshot;
-                if (mode == IndexSnapshot.CLOSING_PRICE) {
+                if (mode == SnapshotMode.CLOSING_PRICE) {
                     String dateStr = line.substring(1, 11);
                     String valueStr = line.substring(22);
 

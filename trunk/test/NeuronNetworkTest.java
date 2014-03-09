@@ -20,11 +20,10 @@ public class NeuronNetworkTest {
         assertNotNull(network);
 
         WebDataLoader dataLoader = new WebDataLoader();
-        List<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", IndexSnapshot.CLOSING_PRICE);
+        List<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
         network.initInputData(data);
-
     }
 
     private NetworkAPI createNetwork() {

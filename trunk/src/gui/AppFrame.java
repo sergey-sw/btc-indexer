@@ -1,17 +1,33 @@
 package gui;
 
 import model.ActivationFunctionType;
+import model.IndexSnapshot;
+import model.SnapshotMode;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.TimeSeriesDataItem;
+import org.jfree.data.xy.XYDataset;
 import sys.Messages;
+import sys.WebDataLoader;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Author: Sergey42
@@ -56,6 +72,8 @@ public class AppFrame extends JFrame {
         });
         jTabbedPane.addTab(Messages.get("forecastTab"), exitBtn2);
 
+        initChartTab();
+
         add(jTabbedPane);
     }
 
@@ -80,6 +98,69 @@ public class AppFrame extends JFrame {
         jTable.setRowHeight(30);
 
         jTabbedPane.addTab(Messages.get("settingTab"), jTable);
+    }
+
+    private void initChartTab() {
+        JPanel chartJPanel = new JPanel(new FlowLayout());
+        jTabbedPane.addTab("Chart", chartJPanel);
+
+        XYDataset xyDataset = createDataSet();
+        JFreeChart chart = createChart(xyDataset);
+
+        final ChartPanel chartPanel = new ChartPanel(chart);
+        Dimension screenSize = getToolkit().getScreenSize();
+        Dimension chartSize = new Dimension(Double.valueOf(screenSize.width * 0.9).intValue(), Double.valueOf(screenSize.height * 0.9).intValue());
+        chartPanel.setPreferredSize(chartSize);
+
+        chartJPanel.add(chartPanel);
+    }
+
+    private XYDataset createDataSet() {
+        TimeSeries timeSeries = new TimeSeries("Index");
+
+        WebDataLoader webDataLoader = new WebDataLoader();
+        List<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
+
+        for (IndexSnapshot indexSnapshot : indexSnapshots) {
+            timeSeries.add(new TimeSeriesDataItem(new Day(indexSnapshot.date), indexSnapshot.value));
+        }
+
+        return new TimeSeriesCollection(timeSeries);
+    }
+
+    private JFreeChart createChart(final XYDataset dataset) {
+
+        final JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                "BTC index",      // chart title
+                "Time",                      // x axis label
+                "Price",                      // y axis label
+                dataset,                  // data
+                false,                     // include legend
+                true,                     // tooltips
+                false                     // urls
+        );
+
+        // NOW DO SOME OPTIONAL CUSTOMISATION OF THE CHART...
+        chart.setBackgroundPaint(Color.white);
+
+        // get a reference to the plot for further customisation...
+        final XYPlot plot = chart.getXYPlot();
+        plot.setBackgroundPaint(Color.lightGray);
+        plot.setDomainGridlinePaint(Color.white);
+        plot.setRangeGridlinePaint(Color.white);
+
+        final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        renderer.setSeriesLinesVisible(0, true);
+        renderer.setSeriesShapesVisible(0, true);
+        renderer.setBaseStroke(new BasicStroke(3));
+        renderer.setBaseShapesVisible(true);
+
+        XYSplineRenderer xySplineRenderer = new XYSplineRenderer();
+        renderer.setSeriesLinesVisible(0, true);
+        renderer.setSeriesShapesVisible(0, true);
+        plot.setRenderer(xySplineRenderer);
+
+        return chart;
     }
 
     private JTabbedPane jTabbedPane;

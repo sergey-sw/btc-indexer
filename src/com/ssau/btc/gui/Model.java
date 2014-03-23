@@ -1,8 +1,8 @@
-package gui;
+package com.ssau.btc.gui;
 
-import model.ActivationFunctionType;
-import model.Network;
-import model.NetworkCreator;
+import com.ssau.btc.model.ActivationFunctionType;
+import com.ssau.btc.model.Network;
+import com.ssau.btc.model.NetworkCreator;
 
 /**
  * Author: Sergey42
@@ -21,15 +21,6 @@ public class Model {
         network = NetworkCreator.create(structure, activationFunctionTypes, parameters);
     }
 
-    public void teachNetwork() {
-        network.initDifferenceHistory();
-
-        //network.fuzzyTeaching();
-        for (int era = 0; era < network.teachCycleCount; era++) {
-            network.fuzzyTeaching2(era);
-            controller.onTeachIterationPerformed(era);
-        }
-    }
 
     public double[] forecast(int count) {
         return network.fuzzyForecast(count);

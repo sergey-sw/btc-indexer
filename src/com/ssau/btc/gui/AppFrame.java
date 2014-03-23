@@ -1,21 +1,20 @@
-package gui;
+package com.ssau.btc.gui;
 
-import model.ActivationFunctionType;
-import model.IndexSnapshot;
-import model.SnapshotMode;
+import com.ssau.btc.model.ActivationFunctionType;
+import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.SnapshotMode;
+import com.ssau.btc.sys.Messages;
+import com.ssau.btc.sys.WebDataLoader;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 import org.jfree.data.xy.XYDataset;
-import sys.Messages;
-import sys.WebDataLoader;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -47,7 +46,7 @@ public class AppFrame extends JFrame {
     private void initBase() {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         try {
-            setIconImage(ImageIO.read(ClassLoader.getSystemResource("resources/btc.png")));
+            setIconImage(ImageIO.read(ClassLoader.getSystemResource("com/ssau/btc/resources/btc.png")));
         } catch (IOException ex) {
             System.out.println("Who cares");
         }
@@ -149,15 +148,7 @@ public class AppFrame extends JFrame {
         plot.setDomainGridlinePaint(Color.white);
         plot.setRangeGridlinePaint(Color.white);
 
-        final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesLinesVisible(0, true);
-        renderer.setSeriesShapesVisible(0, true);
-        renderer.setBaseStroke(new BasicStroke(3));
-        renderer.setBaseShapesVisible(true);
-
         XYSplineRenderer xySplineRenderer = new XYSplineRenderer();
-        renderer.setSeriesLinesVisible(0, true);
-        renderer.setSeriesShapesVisible(0, true);
         plot.setRenderer(xySplineRenderer);
 
         return chart;

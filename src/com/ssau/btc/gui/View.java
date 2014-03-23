@@ -1,4 +1,4 @@
-package gui;
+package com.ssau.btc.gui;
 
 /**
  * Author: Sergey42

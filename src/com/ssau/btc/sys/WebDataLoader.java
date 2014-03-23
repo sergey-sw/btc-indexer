@@ -1,7 +1,7 @@
-package sys;
+package com.ssau.btc.sys;
 
-import model.IndexSnapshot;
-import model.SnapshotMode;
+import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.SnapshotMode;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

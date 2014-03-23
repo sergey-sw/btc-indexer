@@ -1,7 +1,7 @@
-import model.IndexSnapshot;
-import model.SnapshotMode;
+import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.SnapshotMode;
+import com.ssau.btc.sys.WebDataLoader;
 import org.junit.Test;
-import sys.WebDataLoader;
 
 import java.util.List;
 

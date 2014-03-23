@@ -1,4 +1,4 @@
-package model;
+package com.ssau.btc.model;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -10,10 +10,7 @@ import java.util.Date;
  */
 public final class IndexSnapshot {
 
-    public static final Boolean CLOSING_PRICE = false;
-    public static final Boolean OHLC = true;
-
-    public boolean mode;
+    public SnapshotMode mode;
 
     public Date date;
     public double value;
@@ -26,13 +23,13 @@ public final class IndexSnapshot {
     protected static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public IndexSnapshot(Date date, double value) {
-        mode = CLOSING_PRICE;
+        mode = SnapshotMode.CLOSING_PRICE;
         this.date = date;
         this.value = value;
     }
 
     public IndexSnapshot(Date date, double open, double high, double low, double close) {
-        mode = OHLC;
+        mode = SnapshotMode.OHLC;
         this.date = date;
         this.open = open;
         this.high = high;
@@ -42,7 +39,7 @@ public final class IndexSnapshot {
 
     @Override
     public String toString() {
-        if (!mode)
+        if (mode == SnapshotMode.CLOSING_PRICE)
             return "IndexSnapshot {" +
                     "date=" + dateFormat.format(date) +
                     ", value=" + value +

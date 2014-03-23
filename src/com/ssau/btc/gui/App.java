@@ -1,6 +1,6 @@
-package gui;
+package com.ssau.btc.gui;
 
-import sys.Messages;
+import com.ssau.btc.sys.Messages;
 
 /**
  * Author: Sergey42

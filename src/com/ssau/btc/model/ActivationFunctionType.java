@@ -1,6 +1,6 @@
-package model;
+package com.ssau.btc.model;
 
-import sys.Messages;
+import com.ssau.btc.sys.Messages;
 
 /**
  * Author: Sergey42

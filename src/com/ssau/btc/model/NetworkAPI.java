@@ -1,4 +1,4 @@
-package model;
+package com.ssau.btc.model;
 
 /**
  * Author: Sergey42
@@ -6,11 +6,11 @@ package model;
  */
 public interface NetworkAPI {
 
-    void fuzzyTeaching(int studyDataArrayLength);
-
-    void fuzzyTeaching2(int era);
+    void teach();
 
     double[] fuzzyForecast(int forecastSize);
 
     void initInputData(double[] data);
+
+    void setValue(String name, Object value);
 }

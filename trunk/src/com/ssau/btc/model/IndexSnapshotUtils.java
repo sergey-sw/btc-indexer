@@ -1,4 +1,4 @@
-package model;
+package com.ssau.btc.model;
 
 import java.util.List;
 

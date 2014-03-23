@@ -1,8 +1,8 @@
-import gui.AppFrame;
-import gui.Config;
-import model.*;
+import com.ssau.btc.gui.AppFrame;
+import com.ssau.btc.gui.Config;
+import com.ssau.btc.model.*;
+import com.ssau.btc.sys.WebDataLoader;
 import org.junit.Test;
-import sys.WebDataLoader;
 
 import java.util.List;
 
@@ -24,6 +24,16 @@ public class NeuronNetworkTest {
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
         network.initInputData(data);
+
+        network.setValue("speedRate", 0.7);
+        network.setValue("teachCycleCount", 50);
+
+        network.teach();
+
+        double[] forecasts = network.fuzzyForecast(10);
+        for (double forecast : forecasts) {
+            System.out.println(forecast);
+        }
     }
 
     private NetworkAPI createNetwork() {

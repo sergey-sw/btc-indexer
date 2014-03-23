@@ -1,7 +1,7 @@
-package gui;
+package com.ssau.btc.gui;
 
-import model.ActivationFunctionType;
-import model.DemoValuesBuilder;
+import com.ssau.btc.model.ActivationFunctionType;
+import com.ssau.btc.model.DemoValuesBuilder;
 
 /**
  * Author: Sergey42
@@ -71,8 +71,8 @@ public class Controller {
         double[] forecastValues = model.forecast(forecastDataSize);
 
         int inputLength = model.network.inputsMLP.length;
-        int fullLength = model.network.fullLength;
-        int studyLength = model.network.studyLength;
+        //int fullLength = com.ssau.btc.model.network.fullLength;
+        //int studyLength = com.ssau.btc.model.network.studyLength;
 
         double[] forecastDataArray = model.network.forecastInputs;
 
@@ -106,7 +106,7 @@ public class Controller {
 
         model.network.speedRate = speedRate;
 
-        //model.teachNetwork(studyDataSize);
+        //com.ssau.btc.model.teachNetwork(studyDataSize);
 
         double[] averageMistakeData = model.network.averageDiffPerEraHistory;
         view.drawAverageMistake(averageMistakeData);
@@ -139,7 +139,7 @@ public class Controller {
 
         int inputDataArrayLength = (Integer) data[1];
 
-        //model.initInputData(inputDataArrayLength);
+        //com.ssau.btc.model.initInputData(inputDataArrayLength);
 
 
         view.drawInputFunction(model.network.inputs);

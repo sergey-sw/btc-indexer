@@ -1,4 +1,4 @@
-package sys;
+package com.ssau.btc.sys;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

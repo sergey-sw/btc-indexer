@@ -1,5 +1,5 @@
+import com.ssau.btc.sys.DataManager;
 import org.junit.Test;
-import sys.DataManager;
 
 /**
  * @author Sergey Saiyan

@@ -1,6 +1,6 @@
-package gui;
+package com.ssau.btc.gui;
 
-import model.ActivationFunctionType;
+import com.ssau.btc.model.ActivationFunctionType;
 
 import java.util.ArrayList;
 import java.util.List;

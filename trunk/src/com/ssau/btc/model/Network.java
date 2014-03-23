@@ -1,4 +1,4 @@
-package model;
+package com.ssau.btc.model;
 
 import java.util.Random;
 
@@ -9,11 +9,9 @@ import java.util.Random;
 public class Network implements NetworkAPI {
 
     public double[] inputs;
-    public int studyLength;
-
-    public int fullLength;
-
     public double[] nInputs;
+
+    public int studyLength;
 
     public double[] studyInputs;
     public double[] forecastInputs;
@@ -58,6 +56,10 @@ public class Network implements NetworkAPI {
 
     private Random random = new Random();
 
+    private boolean inputDataInitialized = false;
+    private boolean studyComplete = false;
+
+    /* Maps value from interval [A;B] to interval [-1;1] */
     private double normalize(double value) {
         return 2 * (value - 0.5 * (maxValue + minValue)) / (maxValue - minValue);
     }
@@ -212,8 +214,9 @@ public class Network implements NetworkAPI {
     }
 
     // C-means
-    @Override
-    public void fuzzyTeaching(int studyDataArrayLength) {
+    /* Seems that is teaches RBF layer only */
+
+    private void fuzzyTeaching(int studyDataArrayLength) {
         // init belong coefficients
         fuzzyInitBelongs(studyDataArrayLength);
 
@@ -292,6 +295,15 @@ public class Network implements NetworkAPI {
         int l = fuzzyTeachErrorHistory.length;
     }
 
+    @Override
+    public void teach() {
+        initDifferenceHistory();
+        fuzzyTeaching(inputs.length);
+        for (int i = 0; i < teachCycleCount; i++) {
+            fuzzyTeachingMain(i);
+        }
+    }
+
     private double calcActivationFunctionDerivative(double output, double input, int layerId) {
         ActivationFunctionType actFunctionType = activationFunctionTypes[layerId];
 
@@ -355,8 +367,7 @@ public class Network implements NetworkAPI {
         }
     }
 
-    @Override
-    public void fuzzyTeaching2(int era) {
+    private void fuzzyTeachingMain(int eraNumber) {
         int iteration = 0; // Номер итерации алгоритма
         int inputLayerNeuronCount = inputsMLP.length; // кол-во нейронов входного слоя
         int outputId = neuronOutputs.length - 1;
@@ -378,24 +389,24 @@ public class Network implements NetworkAPI {
             // Вычисление величины несоответствия
             double difference = output - nInputs[iteration + inputLayerNeuronCount];
 
-            differenceHistory[era][iteration] = difference;
-            outputsHistory[era][iteration] = output;
+            differenceHistory[eraNumber][iteration] = difference;
+            outputsHistory[eraNumber][iteration] = output;
 
             // Корректировка весов
             fuzzyCorrectWeights(difference);
 
-            // сброс внутренних сигналов
+            // сброс внутренного состояния
             resetCache();
 
             iteration++;
         }
 
         double sum = 0;
-        for (int i = 0; i < differenceHistory[era].length; i++) {
-            sum += differenceHistory[era][i];
+        for (int i = 0; i < differenceHistory[eraNumber].length; i++) {
+            sum += differenceHistory[eraNumber][i];
         }
-        averageDiffPerEraHistory[era] = sum / differenceHistory[era].length - 1;
-        averageDiffPerEraHistory[era] = Math.sqrt(averageDiffPerEraHistory[era]);
+        averageDiffPerEraHistory[eraNumber] = sum / differenceHistory[eraNumber].length - 1;
+        averageDiffPerEraHistory[eraNumber] = Math.sqrt(averageDiffPerEraHistory[eraNumber]);
     }
 
     private void resetCache() {
@@ -474,19 +485,11 @@ public class Network implements NetworkAPI {
         maxValue = MathUtils.findMax(forecastInputs);
         minValue = MathUtils.findMin(forecastInputs);
 
-        fullLength += forecastInputs.length;
 
         //initNormalizedData();
     }
 
-    private void initNormalizedData() {
-        nInputs = new double[inputs.length];
-        for (int i = 0; i < nInputs.length; i++) {
-            nInputs[i] = normalize(inputs[i]);
-        }
-    }
-
-    public void initDifferenceHistory() {
+    private void initDifferenceHistory() {
         differenceHistory = new double[teachCycleCount][];
         outputsHistory = new double[teachCycleCount][];
         int inputDataArrayLength = inputs.length;
@@ -498,13 +501,28 @@ public class Network implements NetworkAPI {
         averageDiffPerEraHistory = new double[teachCycleCount];
     }
 
+    @Override
     public void initInputData(double[] data) {
         inputs = data;
-        fullLength = data.length;
 
         maxValue = MathUtils.findMax(inputs);
         minValue = MathUtils.findMin(inputs);
 
-        initNormalizedData();
+        /* init normalized data */
+        nInputs = new double[inputs.length];
+        for (int i = 0; i < nInputs.length; i++) {
+            nInputs[i] = normalize(inputs[i]);
+        }
+
+        inputDataInitialized = true;
+    }
+
+    @Override
+    public void setValue(String name, Object value) {
+        try {
+            getClass().getField(name).set(this, value);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -30,6 +30,7 @@ public class Network implements NetworkAPI {
 
     public int layerCount;
 
+    /* for 8-16-1 net array is 2:16:8*/
     public double[][][] neuronWeights;
 
     public double[][][] neuronWeightsM1;
@@ -72,6 +73,10 @@ public class Network implements NetworkAPI {
     }
 
     private double calcNeuronOutput(double input, int layerNo) {
+        if (layerNo == 0) {
+            return input;
+        }
+
         switch (activationFunctionTypes[layerNo]) {
             case C_SIGMOID:
                 return 1.0 / (1 + Math.exp(-activationFunctionCoefficients[layerNo] * input));

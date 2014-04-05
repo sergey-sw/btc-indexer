@@ -10,7 +10,9 @@ public interface NetworkAPI {
 
     double[] fuzzyForecast(int forecastSize);
 
-    void initInputData(double[] data);
+    void initInputData(double[] data, Interval interval);
 
     void setValue(String name, Object value);
+
+    Object getValue(String name);
 }

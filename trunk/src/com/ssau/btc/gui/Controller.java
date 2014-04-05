@@ -61,14 +61,14 @@ public class Controller {
         view.displayNetworkCreatedMessage();
     }
 
-    public void btnForecastClickHandler() {
+    /*public void btnForecastClickHandler() {
         Object[] data = view.getTab2Data();
         if (data == null) return;
 
         int forecastDataSize = (Integer) data[3];
         //var studyDataSize = (int) data[4];
 
-        double[] forecastValues = model.forecast(forecastDataSize);
+        //double[] forecastValues = model.forecast(forecastDataSize);
 
         int inputLength = model.network.inputsMLP.length;
         //int fullLength = com.ssau.btc.model.network.fullLength;
@@ -83,7 +83,7 @@ public class Controller {
 
         view.drawInputFunction(fullArray);
         view.drawForecast(forecastValues, inputLength, forecastDataArray);
-    }
+    }*/
 
     public void BtnStudyClickHandler() {
         Object[] data = view.getTab2Data();

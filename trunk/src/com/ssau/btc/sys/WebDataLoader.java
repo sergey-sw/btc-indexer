@@ -67,7 +67,7 @@ public class WebDataLoader {
             }
 
             for (IndexSnapshot indexSnapshot : indexSnapshots) {
-                System.out.println(indexSnapshot);
+                //System.out.println(indexSnapshot);
             }
 
             return indexSnapshots;

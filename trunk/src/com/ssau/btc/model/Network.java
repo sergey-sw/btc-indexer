@@ -57,6 +57,7 @@ public class Network implements NetworkAPI {
 
     private Random random = new Random();
 
+    public Interval interval;
     private boolean inputDataInitialized = false;
     private boolean studyComplete = false;
 
@@ -74,7 +75,7 @@ public class Network implements NetworkAPI {
 
     private double calcNeuronOutput(double input, int layerNo) {
         if (layerNo == 0) {
-            return input;
+            layerNo = 1;
         }
 
         switch (activationFunctionTypes[layerNo]) {
@@ -152,7 +153,7 @@ public class Network implements NetworkAPI {
             for (int j = 0; j < fuzzyCount; j++) {
                 neuronInputs[0][u] += fuzzyOutputs[j] * neuronWeights[0][u][j];
             }
-            neuronOutputs[0][u] = calcNeuronOutput(neuronInputs[0][u], 0);
+            neuronOutputs[0][u] = calcNeuronOutput(neuronInputs[0][u], 1);  //todo i replace layerNo 0 with 1
 
             int zLength = neuronInputs[1].length;
             for (int z = 0; z < zLength; z++) {
@@ -160,12 +161,12 @@ public class Network implements NetworkAPI {
             }
         }
 
-        // Проход по всем слоям нейронной сети c 1
-        for (int i = 1; i < neuronInputs.length; i++) {
+        // Проход по всем слоям нейронной сети c 1 todo i replace 1 with 0
+        for (int i = 0; i < neuronInputs.length; i++) {
             int jLength = neuronInputs[i].length;
             // Проход по всем нейронам текущего слоя
             for (int j = 0; j < jLength; j++) {
-                neuronOutputs[i][j] = calcNeuronOutput(neuronInputs[i][j], i);
+                neuronOutputs[i][j] = calcNeuronOutput(neuronInputs[i][j], i + 1); //todo i add +1
 
                 // Проход по нейронам, явл-ся приемниками сигнала от neuron
                 if (i >= neuronInputs.length - 1) continue;
@@ -229,8 +230,8 @@ public class Network implements NetworkAPI {
 
         boolean errorIsOk = false;
         int iterations = 0;
-        final double errorBarrier = 0.0001;
-        final int iterationsMaxNumber = 50;
+        final double errorBarrier = 0.001;
+        final int iterationsMaxNumber = 20;
 
         double[] fuzzyTeachErrorHistory = new double[iterationsMaxNumber];
 
@@ -331,21 +332,23 @@ public class Network implements NetworkAPI {
 
     private void fuzzyCorrectWeights(double difference) {
         int last = neuronDeltas.length - 1;
-        neuronDeltas[last][0] = difference * calcActivationFunctionDerivative(neuronOutputs[last][0], neuronInputs[last][0], last);
+        neuronDeltas[last][0] = difference *
+                calcActivationFunctionDerivative(neuronOutputs[last][0], neuronInputs[last][0], last + 1); //todo i made lst + 1
 
         // Проход по слоям - с предпоследнего до первого
         // Вычисление величины дельта
         for (int i = last - 1; i >= 0; i--) {
             int iLength = neuronInputs[i].length;
             // Проход по нейронам слоя
+            int uLength = neuronInputs[i + 1].length;
             for (int j = 0; j < iLength; j++) {
                 double rightSum = 0.0;
-                int uLength = neuronInputs[i + 1].length;
                 for (int u = 0; u < uLength; u++) {
                     rightSum += neuronWeights[i + 1][u][j] * neuronDeltas[i + 1][u];
                 }
                 neuronDeltas[i][j] = rightSum *
-                        calcActivationFunctionDerivative(neuronOutputs[i][j], neuronInputs[i][j], i);
+                        //todo i put +1 to last param
+                        calcActivationFunctionDerivative(neuronOutputs[i][j], neuronInputs[i][j], i + 1);
             }
         }
         //Корректировка для I=0
@@ -408,9 +411,9 @@ public class Network implements NetworkAPI {
 
         double sum = 0;
         for (int i = 0; i < differenceHistory[eraNumber].length; i++) {
-            sum += differenceHistory[eraNumber][i];
+            sum += Math.abs(differenceHistory[eraNumber][i]);
         }
-        averageDiffPerEraHistory[eraNumber] = sum / differenceHistory[eraNumber].length - 1;
+        averageDiffPerEraHistory[eraNumber] = sum / differenceHistory[eraNumber].length /*- 1*/;
         averageDiffPerEraHistory[eraNumber] = Math.sqrt(averageDiffPerEraHistory[eraNumber]);
     }
 
@@ -487,8 +490,8 @@ public class Network implements NetworkAPI {
         for (int i = 0; i < forecastInputs.length; i++) {
             forecastInputs[i] = (maxValues[i] + minValues[i]) / 2;
         }
-        maxValue = MathUtils.findMax(forecastInputs);
-        minValue = MathUtils.findMin(forecastInputs);
+        maxValue = MathUtils.findMax(studyInputs);
+        minValue = MathUtils.findMin(studyInputs);
 
 
         //initNormalizedData();
@@ -507,8 +510,9 @@ public class Network implements NetworkAPI {
     }
 
     @Override
-    public void initInputData(double[] data) {
+    public void initInputData(double[] data, Interval interval) {
         inputs = data;
+        this.interval = interval;
 
         maxValue = MathUtils.findMax(inputs);
         minValue = MathUtils.findMin(inputs);
@@ -526,6 +530,15 @@ public class Network implements NetworkAPI {
     public void setValue(String name, Object value) {
         try {
             getClass().getField(name).set(this, value);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Object getValue(String name) {
+        try {
+            return getClass().getField(name).get(this);
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

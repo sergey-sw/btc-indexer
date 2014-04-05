@@ -15,7 +15,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import java.awt.*;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Author: Sergey42
@@ -32,7 +32,7 @@ public class ChartHelper {
         return new XYSeriesCollection(xySeries);
     }
 
-    public static TimeSeriesCollection createTimeDataSet(List<IndexSnapshot> indexSnapshots) {
+    public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots) {
         TimeSeries timeSeries = new TimeSeries("Index");
 
         for (IndexSnapshot indexSnapshot : indexSnapshots) {

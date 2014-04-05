@@ -1,5 +1,6 @@
 package com.ssau.btc.sys;
 
+import com.intelli.ray.core.ManagedComponent;
 import com.ssau.btc.model.IndexSnapshot;
 import com.ssau.btc.model.SnapshotMode;
 import org.apache.commons.io.IOUtils;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,7 +22,8 @@ import java.util.List;
  * @author Sergey Saiyan
  * @version $Id$
  */
-public class WebDataLoader {
+@ManagedComponent(name = WebLoaderAPI.NAME)
+public class WebDataLoader implements WebLoaderAPI {
 
     /**
      * Loads btc indexes from www.coindesk.com
@@ -29,7 +32,8 @@ public class WebDataLoader {
      * @param endDate   end date in yyyy-MM-dd
      * @param mode      TRUE for OHLC, FALSE for closing price
      */
-    public List<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode) {
+    @Override
+    public Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode) {
         String urlPattern = "http://api.coindesk.com/charts/data?output=csv&data=%s&startdate=%s&enddate=%s&exchanges=bpi";
 
         String url = String.format(urlPattern, mode == SnapshotMode.OHLC ? "ohlc" : "close", startDate, endDate);
@@ -44,10 +48,20 @@ public class WebDataLoader {
 
             List lines = IOUtils.readLines(inputStream);
 
+            if (!"Date,\"Close Price\"".equals(lines.get(0))) {
+                System.err.println("Check web load URL");
+                return new ArrayList<>();
+            }
+
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             List<IndexSnapshot> indexSnapshots = new ArrayList<>(lines.size());
             for (int i = 1; i < lines.size() - 3; i++) {
                 String line = (String) lines.get(i);
+
+                String hour = line.substring(12, 14);
+                if (!"00".equals(hour)) {
+                    continue;
+                }
 
                 IndexSnapshot indexSnapshot;
                 if (mode == SnapshotMode.CLOSING_PRICE) {
@@ -64,10 +78,6 @@ public class WebDataLoader {
                             Double.valueOf(ohlc[0]), Double.valueOf(ohlc[1]), Double.valueOf(ohlc[2]), Double.valueOf(ohlc[3]));
                 }
                 indexSnapshots.add(indexSnapshot);
-            }
-
-            for (IndexSnapshot indexSnapshot : indexSnapshots) {
-                //System.out.println(indexSnapshot);
             }
 
             return indexSnapshots;

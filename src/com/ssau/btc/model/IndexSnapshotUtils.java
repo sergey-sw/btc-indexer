@@ -1,5 +1,6 @@
 package com.ssau.btc.model;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,11 +14,12 @@ public class IndexSnapshotUtils {
     public static final int LOW = 2;
     public static final int CLOSE = 3;
 
-    public static double[] parseClosingPrice(List<IndexSnapshot> indexSnapshots) {
+    public static double[] parseClosingPrice(Collection<IndexSnapshot> indexSnapshots) {
         double[] values = new double[indexSnapshots.size()];
 
-        for (int i = 0; i < indexSnapshots.size(); i++) {
-            values[i] = indexSnapshots.get(i).value;
+        int k = 0;
+        for (IndexSnapshot indexSnapshot : indexSnapshots) {
+            values[k++] = indexSnapshot.value;// indexSnapshots.get(i).value;
         }
 
         return values;

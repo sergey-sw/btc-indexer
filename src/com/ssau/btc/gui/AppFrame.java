@@ -1,8 +1,9 @@
 package com.ssau.btc.gui;
 
+import com.intelli.ray.core.Inject;
+import com.intelli.ray.core.ManagedComponent;
 import com.ssau.btc.model.*;
-import com.ssau.btc.sys.Messages;
-import com.ssau.btc.sys.WebDataLoader;
+import com.ssau.btc.sys.*;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -11,58 +12,159 @@ import org.jfree.data.xy.XYDataset;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Author: Sergey42
  * Date: 14.02.14 21:29
  */
+@ManagedComponent(name = "AppFrame")
 public class AppFrame extends AppFrameCL {
 
-    public AppFrame() {
-        super();
+    @Inject
+    protected CurrentPriceProvider currentPriceProvider;
+    @Inject
+    protected ThreadManager threadManager;
+    @Inject
+    protected WebLoaderAPI webDataLoader;
+
+    public void postInit() {
         initComponents();
-    }
-
-    protected JButton addLayerBtn;
-    protected JButton removeLayerBtn;
-    protected JButton standardLayersBtn;
-    protected SettingsTableModel structureTableModel;
-    protected JTable structureTable;
-    protected JPanel settingsPanel;
-
-    private void initComponents() {
-        jTabbedPane = new JTabbedPane();
-
-        initSettingTab();
-
-        JButton exitBtn2 = new JButton("Exit");
-        exitBtn2.addActionListener(new ActionListener() {
+        threadManager.scheduleTask(new Runnable() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+            public void run() {
+                CurrentPriceProvider.Price price = currentPriceProvider.getCurrentPrice();
+                usdValue.setText(String.format(H1_PATTERN, price.USD));
+                eurValue.setText(String.format(H1_PATTERN, price.EUR));
+
+                if (prevUSDValue != null) {
+                    usdDiffValue.setText(String.format(H1_PATTERN, price.calcDiff(prevUSDValue)));
+                    if (price.diff.startsWith("+")) {
+                        usdDiffValue.setForeground(green);
+                    } else {
+                        usdDiffValue.setForeground(Color.RED);
+                    }
+                    eurDiffValue.setText(usdDiffValue.getText());
+                }
+            }
+        }, 10, TimeUnit.SECONDS);
+        threadManager.scheduleTask(new Runnable() {
+            @Override
+            public void run() {
+                rateTsLabel.setText(String.format(H2_PATTERN, DateUtils.formatTime(new Date())));
+            }
+        }, 50, TimeUnit.MILLISECONDS);
+        threadManager.submitTask(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrentPriceProvider.Price> lastPrices = currentPriceProvider.getLastPrices(HISTORY_DAY_COUNT);
+                prevUSDValue = lastPrices.get(0).usdDouble;
+                for (int i = 0; i < lastPrices.size(); i++) {
+                    CurrentPriceProvider.Price price = lastPrices.get(i);
+
+                    prevDateLabels[i].setText(price.ts);
+                    prevPriceLabels[i].setText(price.USD);
+                    prevDiffLabels[i].setText(price.diff);
+
+                    if (price.diff.startsWith("+")) {
+                        prevDiffLabels[i].setForeground(green);
+                    } else {
+                        prevDiffLabels[i].setForeground(Color.RED);
+                    }
+                }
             }
         });
-        jTabbedPane.addTab(Messages.get("forecastTab"), exitBtn2);
+    }
 
+    protected void initComponents() {
+        jTabbedPane = new JTabbedPane();
+
+        initInfoTab();
+        initStructureTab();
         initChartTab();
         initMistakeTab();
 
         add(jTabbedPane);
     }
 
-    private void initSettingTab() {
-        settingsPanel = new JPanel();
+    protected void initInfoTab() {
+        FlowLayout infoPanelLayout = new FlowLayout(FlowLayout.LEFT);
+        infoPanelLayout.setHgap(10);
+        JPanel infoPanel = new JPanel(infoPanelLayout);
+
+        JPanel ratesPanel = new JPanel(new GridLayout(4 + HISTORY_DAY_COUNT, 3, 20, 5));
+        ratesPanel.setPreferredSize(new Dimension(350, 450));
+
+        JLabel ratesLabel = new JLabel(String.format(H2_PATTERN, Messages.get("ratesCaption")));
+        rateTsLabel = new JLabel();
+        ratesPanel.add(ratesLabel);
+        ratesPanel.add(rateTsLabel);
+        ratesPanel.add(new JLabel(String.format(H1_PATTERN, "+/-")));
+
+        JLabel usdLabel = new JLabel(String.format(H1_PATTERN, "USD"));
+        usdValue = new JLabel(String.format(H1_PATTERN, "..."));
+        ratesPanel.add(usdLabel);
+        ratesPanel.add(usdValue);
+        usdDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
+        ratesPanel.add(usdDiffValue);
+
+        JLabel eurLabel = new JLabel(String.format(H1_PATTERN, "EUR"));
+        eurValue = new JLabel(String.format(H1_PATTERN, "..."));
+        ratesPanel.add(eurLabel);
+        ratesPanel.add(eurValue);
+        eurDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
+        ratesPanel.add(eurDiffValue);
+
+        ratesPanel.add(new JLabel(String.format(H3_PATTERN, Messages.get("prevDays"))));
+        ratesPanel.add(new JLabel());
+        ratesPanel.add(new JLabel());
+
+        for (int i = 0; i < HISTORY_DAY_COUNT; i++) {
+            prevDateLabels[i] = new JLabel();
+            prevPriceLabels[i] = new JLabel();
+            prevDiffLabels[i] = new JLabel();
+
+            ratesPanel.add(prevDateLabels[i]);
+            ratesPanel.add(prevPriceLabels[i]);
+            ratesPanel.add(prevDiffLabels[i]);
+        }
+
+        infoPanel.add(ratesPanel);
+
+        JPanel chartJPanel = new JPanel();
+        String to = DateUtils.format(new Date());
+        String from = DateUtils.format(DateUtils.calcDate(new Date(), -HISTORY_DAY_COUNT - 1));
+
+        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE);
+        TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
+        JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
+
+        final ChartPanel chartPanel = new ChartPanel(chart);
+        Dimension screenSize = getToolkit().getScreenSize();
+        Dimension chartSize = new Dimension(
+                Double.valueOf(screenSize.width * 0.7).intValue(),
+                Double.valueOf(screenSize.height * 0.6).intValue());
+        chartPanel.setMaximumSize(chartSize);
+        chartJPanel.add(chartPanel);
+
+        infoPanel.add(chartJPanel);
+
+        jTabbedPane.addTab(Messages.get("infoTab"), infoPanel);
+    }
+
+    protected void initStructureTab() {
+        structurePanel = new JPanel();
         FlowLayout settingsPanelLayout = new FlowLayout(FlowLayout.LEFT);
         settingsPanelLayout.setVgap(MARGIN);
         settingsPanelLayout.setHgap(MARGIN);
-        settingsPanel.setLayout(settingsPanelLayout);
+        structurePanel.setLayout(settingsPanelLayout);
 
         JPanel tablePanelOuter = new JPanel();
         BoxLayout tableLayout = new BoxLayout(tablePanelOuter, BoxLayout.Y_AXIS);
@@ -131,36 +233,38 @@ public class AppFrame extends AppFrameCL {
         tablePanelInner.add(structureTable);
         tablePanelOuter.add(tablePanelInner);
 
-        settingsPanel.add(tablePanelOuter);
+        structurePanel.add(tablePanelOuter);
 
-        jTabbedPane.addTab(Messages.get("settingTab"), settingsPanel);
+        jTabbedPane.addTab(Messages.get("settingTab"), structurePanel);
     }
 
-    private void initChartTab() {
+    protected void initChartTab() {
         JPanel chartJPanel = new JPanel(new FlowLayout());
         jTabbedPane.addTab("Chart", chartJPanel);
 
-        WebDataLoader webDataLoader = new WebDataLoader();
-        List<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
+        String to = DateUtils.format(new Date());
+        String from = DateUtils.format(DateUtils.calcDate(new Date(), -HISTORY_DAY_COUNT - 1));
+
+        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE);
         TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
         JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
 
         final ChartPanel chartPanel = new ChartPanel(chart);
         Dimension screenSize = getToolkit().getScreenSize();
-        Dimension chartSize = new Dimension(Double.valueOf(screenSize.width * 0.9).intValue(), Double.valueOf(screenSize.height * 0.9).intValue());
-        chartPanel.setPreferredSize(chartSize);
+        Dimension chartSize = new Dimension(Double.valueOf(screenSize.width * 0.5).intValue(), Double.valueOf(screenSize.height * 0.52).intValue());
+        chartPanel.setMaximumSize(chartSize);
 
         chartJPanel.add(chartPanel);
     }
 
-    private void initMistakeTab() {
+    protected void initMistakeTab() {
         JPanel chartJPanel = new JPanel(new FlowLayout());
         jTabbedPane.addTab("Mistakes", chartJPanel);
 
         NetworkAPI network = NetworkCreator.buildDefault();
 
         WebDataLoader dataLoader = new WebDataLoader();
-        List<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
+        Collection<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
         network.initInputData(data, Interval.DAY);
@@ -184,7 +288,7 @@ public class AppFrame extends AppFrameCL {
     }
 
 
-    private class AddLayerHandler implements ActionListener {
+    protected class AddLayerHandler implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -195,7 +299,7 @@ public class AppFrame extends AppFrameCL {
         }
     }
 
-    private class RemoveLayerHandler implements ActionListener {
+    protected class RemoveLayerHandler implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -204,7 +308,7 @@ public class AppFrame extends AppFrameCL {
         }
     }
 
-    private class StandardLayerHandler implements ActionListener {
+    protected class StandardLayerHandler implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -219,65 +323,6 @@ public class AppFrame extends AppFrameCL {
             }
 
             addLayerBtn.setEnabled(true);
-        }
-    }
-
-    private class SettingsTableModel extends DefaultTableModel {
-
-        String[] headers;
-        Class<?>[] classes;
-        public java.util.List<LayerInfo> items = new ArrayList<>();
-
-        public SettingsTableModel() {
-            super();
-            headers = new String[]
-                    {Messages.get("neuronLabel"), Messages.get("functionLabel"), Messages.get("functionCoefficientLabel")};
-            classes = new Class[]{int.class, ActivationFunctionType.class, double.class};
-        }
-
-        public void addItem(LayerInfo layerInfo) {
-            items.add(layerInfo);
-            insertRow(items.size() - 1, new Object[]{layerInfo.neuronCnt, layerInfo.functionType, layerInfo.coefficient});
-        }
-
-        public void removeItem(int index) {
-            items.remove(index);
-            removeRow(index);
-        }
-
-        @Override
-        public int getColumnCount() {
-            return 3;
-        }
-
-        @Override
-        public String getColumnName(int columnIndex) {
-            return headers[columnIndex];
-        }
-
-        @Override
-        public Class<?> getColumnClass(int columnIndex) {
-            return classes[columnIndex];
-        }
-
-        @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return !(rowIndex == 0 && columnIndex != 0);
-
-        }
-
-        @Override
-        public Object getValueAt(int rowIndex, int columnIndex) {
-            if (rowIndex == 0 && columnIndex != 0) {
-                return null;
-            }
-
-            return items.get(rowIndex).get(columnIndex);
-        }
-
-        @Override
-        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            items.get(rowIndex).set(columnIndex, aValue);
         }
     }
 }

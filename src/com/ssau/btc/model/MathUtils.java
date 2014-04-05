@@ -33,4 +33,12 @@ public class MathUtils {
         // so add 1 to make it inclusive
         return rand.nextInt((max - min) + 1) + min;
     }
+
+    public static double sum(double[] array) {
+        double res = 0.0;
+        for (double d : array) {
+            res += d;
+        }
+        return res;
+    }
 }

@@ -21,8 +21,4 @@ public class Model {
         network = NetworkCreator.create(structure, activationFunctionTypes, parameters);
     }
 
-
-    public double[] forecast(int count) {
-        return network.fuzzyForecast(count);
-    }
 }

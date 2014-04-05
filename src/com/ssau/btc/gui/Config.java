@@ -1,6 +1,7 @@
 package com.ssau.btc.gui;
 
 import com.ssau.btc.model.ActivationFunctionType;
+import com.ssau.btc.model.LayerInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +12,15 @@ import java.util.List;
  */
 public class Config {
 
-    public static List<AppFrame.TableItem> getDefaultStructure() {
-        List<AppFrame.TableItem> items = new ArrayList<>();
-        items.add(new AppFrame.TableItem(8, null, 0));
-        items.add(new AppFrame.TableItem(16, ActivationFunctionType.H_TANGENT, 0.15));
-        items.add(new AppFrame.TableItem(1, ActivationFunctionType.SINUS, 0.5));
+    public static List<LayerInfo> getDefaultStructure() {
+        List<LayerInfo> items = new ArrayList<>();
+        items.add(new LayerInfo(8, null, 0));
+        items.add(new LayerInfo(16, ActivationFunctionType.H_TANGENT, 0.15));
+        items.add(new LayerInfo(1, ActivationFunctionType.SINUS, 0.5));
         return items;
+    }
+
+    public static LayerInfo createLayerInfo() {
+        return new LayerInfo(10, null, 0.8);
     }
 }

@@ -11,6 +11,10 @@ import java.util.Properties;
  */
 public class Messages {
 
+    static {
+        init("ru");
+    }
+
     private static Messages instance;
 
     private Properties properties;

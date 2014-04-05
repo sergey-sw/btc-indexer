@@ -1,5 +1,8 @@
 package com.ssau.btc.model;
 
+import com.ssau.btc.gui.Config;
+
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -44,6 +47,7 @@ public class NetworkCreator {
 
         System.arraycopy(mParams, 0, network.activationFunctionCoefficients, 0, mParams.length);
 
+        System.arraycopy(activationFunctionTypes, 0, network.activationFunctionTypes, 0, layers.length);
 
         for (int i = 0; i < layersCount; i++) {
             int neuronsCount = mArray[i];
@@ -55,7 +59,6 @@ public class NetworkCreator {
             network.neuronWeights[i] = new double[neuronsCount][];
             network.neuronWeightsM1[i] = new double[neuronsCount][];
             network.neuronWeightsM2[i] = new double[neuronsCount][];
-            network.activationFunctionTypes[i] = activationFunctionTypes[i];
 
 
             int prevLayerCount = (i == 0) ? network.inputsMLP.length : mArray[i - 1];
@@ -86,5 +89,23 @@ public class NetworkCreator {
 
 
         return network;
+    }
+
+    public static Network buildDefault() {
+        List<LayerInfo> defaultStructure = Config.getDefaultStructure();
+
+        int size = defaultStructure.size();
+
+        int[] neuronCounts = new int[size];
+        ActivationFunctionType[] types = new ActivationFunctionType[size];
+        double[] coefficients = new double[size];
+
+        for (int i = 0; i < size; i++) {
+            neuronCounts[i] = defaultStructure.get(i).neuronCnt;
+            types[i] = defaultStructure.get(i).functionType;
+            coefficients[i] = defaultStructure.get(i).coefficient;
+        }
+
+        return create(neuronCounts, types, coefficients);
     }
 }

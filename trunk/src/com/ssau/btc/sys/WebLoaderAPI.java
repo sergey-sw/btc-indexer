@@ -13,5 +13,8 @@ public interface WebLoaderAPI {
 
     String NAME = "WebDataLoader";
 
-    Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode);
+    int DAY = 0;
+    int HOUR = 1;
+
+    Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode, int resolution);
 }

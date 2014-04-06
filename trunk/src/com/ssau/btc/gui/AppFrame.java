@@ -16,6 +16,7 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -40,19 +41,10 @@ public class AppFrame extends AppFrameCL {
         threadManager.scheduleTask(new Runnable() {
             @Override
             public void run() {
-                CurrentPriceProvider.Price price = currentPriceProvider.getCurrentPrice();
-                usdValue.setText(String.format(H1_PATTERN, price.USD));
-                eurValue.setText(String.format(H1_PATTERN, price.EUR));
-
-                if (prevUSDValue != null) {
-                    usdDiffValue.setText(String.format(H1_PATTERN, price.calcDiff(prevUSDValue)));
-                    if (price.diff.startsWith("+")) {
-                        usdDiffValue.setForeground(green);
-                    } else {
-                        usdDiffValue.setForeground(Color.RED);
-                    }
-                    eurDiffValue.setText(usdDiffValue.getText());
-                }
+                currentPrice = currentPriceProvider.getCurrentPrice();
+                usdValue.setText(String.format(H1_PATTERN, currentPrice.USD));
+                /*eurValue.setText(String.format(H1_PATTERN, currentPrice.EUR));*/
+                updateCurrentPriceDiff();
             }
         }, 10, TimeUnit.SECONDS);
         threadManager.scheduleTask(new Runnable() {
@@ -115,12 +107,16 @@ public class AppFrame extends AppFrameCL {
         usdDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
         ratesPanel.add(usdDiffValue);
 
-        JLabel eurLabel = new JLabel(String.format(H1_PATTERN, "EUR"));
+        /*JLabel eurLabel = new JLabel(String.format(H1_PATTERN, "EUR"));
         eurValue = new JLabel(String.format(H1_PATTERN, "..."));
         ratesPanel.add(eurLabel);
         ratesPanel.add(eurValue);
         eurDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
-        ratesPanel.add(eurDiffValue);
+        ratesPanel.add(eurDiffValue);*/
+
+        ratesPanel.add(new JLabel());
+        ratesPanel.add(new JLabel());
+        ratesPanel.add(new JLabel());
 
         ratesPanel.add(new JLabel(String.format(H3_PATTERN, Messages.get("prevDays"))));
         ratesPanel.add(new JLabel());
@@ -140,9 +136,9 @@ public class AppFrame extends AppFrameCL {
 
         JPanel chartJPanel = new JPanel();
         String to = DateUtils.format(new Date());
-        String from = DateUtils.format(DateUtils.calcDate(new Date(), -HISTORY_DAY_COUNT - 1));
+        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.HOUR ,-24));
 
-        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE);
+        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.HOUR);
         TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
         JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
 
@@ -243,9 +239,9 @@ public class AppFrame extends AppFrameCL {
         jTabbedPane.addTab("Chart", chartJPanel);
 
         String to = DateUtils.format(new Date());
-        String from = DateUtils.format(DateUtils.calcDate(new Date(), -HISTORY_DAY_COUNT - 1));
+        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.DATE, -HISTORY_DAY_COUNT - 1));
 
-        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE);
+        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
         TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
         JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
 
@@ -264,7 +260,8 @@ public class AppFrame extends AppFrameCL {
         NetworkAPI network = NetworkCreator.buildDefault();
 
         WebDataLoader dataLoader = new WebDataLoader();
-        Collection<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
+        Collection<IndexSnapshot> indexSnapshots = dataLoader.
+                loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
         network.initInputData(data, Interval.DAY);
@@ -287,6 +284,17 @@ public class AppFrame extends AppFrameCL {
         chartJPanel.add(chartPanel);
     }
 
+    protected void updateCurrentPriceDiff() {
+        if (prevUSDValue != null) {
+            usdDiffValue.setText(String.format(H1_PATTERN, currentPrice.calcDiff(prevUSDValue)));
+            if (currentPrice.diff.startsWith("+")) {
+                usdDiffValue.setForeground(green);
+            } else {
+                usdDiffValue.setForeground(Color.RED);
+            }
+//            eurDiffValue.setText(usdDiffValue.getText());
+        }
+    }
 
     protected class AddLayerHandler implements ActionListener {
 

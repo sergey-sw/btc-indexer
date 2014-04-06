@@ -6,10 +6,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.time.TimeSeriesDataItem;
+import org.jfree.data.time.*;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -36,7 +33,7 @@ public class ChartHelper {
         TimeSeries timeSeries = new TimeSeries("Index");
 
         for (IndexSnapshot indexSnapshot : indexSnapshots) {
-            timeSeries.add(new TimeSeriesDataItem(new Day(indexSnapshot.date), indexSnapshot.value));
+            timeSeries.add(new TimeSeriesDataItem(new Hour(indexSnapshot.date), indexSnapshot.value));
         }
 
         return new TimeSeriesCollection(timeSeries);

@@ -1,6 +1,7 @@
 import com.ssau.btc.gui.Config;
 import com.ssau.btc.model.*;
 import com.ssau.btc.sys.WebDataLoader;
+import com.ssau.btc.sys.WebLoaderAPI;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -17,7 +18,8 @@ public class NeuronNetworkTest {
         NetworkAPI network = createNetwork();
 
         WebDataLoader dataLoader = new WebDataLoader();
-        Collection<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE);
+        Collection<IndexSnapshot> indexSnapshots = dataLoader.loadCoinDeskIndexes
+                ("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
         network.initInputData(data, Interval.DAY);

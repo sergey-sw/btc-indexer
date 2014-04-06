@@ -61,7 +61,7 @@ public class CurrentPriceProvider {
 
     public List<Price> getLastPrices(int days) {
         Date now = new Date();
-        Date before = DateUtils.calcDate(now, -days - 2);
+        Date before = DateUtils.calcDate(now, Calendar.DATE , -days - 2);
 
         String url = String.format(LAST_PRICES_URL, DateUtils.format(before), DateUtils.format(now));
 

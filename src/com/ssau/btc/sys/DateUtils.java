@@ -55,10 +55,10 @@ public class DateUtils {
         }
     }
 
-    public static Date calcDate(Date from, int days) {
+    public static Date calcDate(Date from, int unit, int amount) {
         Calendar instance = calendar.get();
         instance.setTime(from);
-        instance.add(Calendar.DATE, days);
+        instance.add(unit, amount);
         return instance.getTime();
     }
 }

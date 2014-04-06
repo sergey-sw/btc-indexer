@@ -2,6 +2,7 @@ package com.ssau.btc.gui;
 
 import com.ssau.btc.model.ActivationFunctionType;
 import com.ssau.btc.model.LayerInfo;
+import com.ssau.btc.sys.CurrentPriceProvider;
 import com.ssau.btc.sys.Messages;
 
 import javax.imageio.ImageIO;
@@ -40,9 +41,6 @@ public class AppFrameCL extends JFrame {
     protected String H2_PATTERN = "<html><h2><b>%s</b></h2></html>";
     protected String H3_PATTERN = "<html><h3><b>%s</b></h3></html>";
 
-    protected String PLUS_PATTERN = "<html><h3><b>%s</b></h3></html>";
-    protected String MINUS_PATTERN = "<html><h3><b>%s</b></h3></html>";
-
     protected Color green = new Color(34, 139, 34);
 
     protected static final int HISTORY_DAY_COUNT = 10;
@@ -50,6 +48,7 @@ public class AppFrameCL extends JFrame {
     protected JLabel[] prevDateLabels = new JLabel[HISTORY_DAY_COUNT];
     protected JLabel[] prevPriceLabels = new JLabel[HISTORY_DAY_COUNT];
 
+    protected CurrentPriceProvider.Price currentPrice;
     protected volatile Double prevUSDValue;
 
     public AppFrameCL() {

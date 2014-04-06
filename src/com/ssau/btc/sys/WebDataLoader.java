@@ -13,10 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Sergey Saiyan
@@ -33,7 +30,7 @@ public class WebDataLoader implements WebLoaderAPI {
      * @param mode      TRUE for OHLC, FALSE for closing price
      */
     @Override
-    public Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode) {
+    public Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode, int resolution) {
         String urlPattern = "http://api.coindesk.com/charts/data?output=csv&data=%s&startdate=%s&enddate=%s&exchanges=bpi";
 
         String url = String.format(urlPattern, mode == SnapshotMode.OHLC ? "ohlc" : "close", startDate, endDate);
@@ -53,24 +50,26 @@ public class WebDataLoader implements WebLoaderAPI {
                 return new ArrayList<>();
             }
 
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             List<IndexSnapshot> indexSnapshots = new ArrayList<>(lines.size());
             for (int i = 1; i < lines.size() - 3; i++) {
                 String line = (String) lines.get(i);
 
-                String hour = line.substring(12, 14);
-                if (!"00".equals(hour)) {
-                    continue;
+                if (resolution == HOUR) {
+                    String minute = line.substring(15, 17);
+                    if (!"00".equals(minute)) {
+                        continue;
+                    }
                 }
 
                 IndexSnapshot indexSnapshot;
                 if (mode == SnapshotMode.CLOSING_PRICE) {
-                    String dateStr = line.substring(1, 11);
+                    String dateStr = line.substring(1, 20);
                     String valueStr = line.substring(22);
 
                     indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr), Double.valueOf(valueStr));
                 } else {
-                    String dateStr = line.substring(1, 11);
+                    String dateStr = line.substring(1, 20);
                     String valuesStr = line.substring(22);
                     String[] ohlc = valuesStr.split(",");
 
@@ -78,6 +77,10 @@ public class WebDataLoader implements WebLoaderAPI {
                             Double.valueOf(ohlc[0]), Double.valueOf(ohlc[1]), Double.valueOf(ohlc[2]), Double.valueOf(ohlc[3]));
                 }
                 indexSnapshots.add(indexSnapshot);
+            }
+
+            if (DateUtils.format(new Date()).equals(endDate)) {
+                indexSnapshots.remove(indexSnapshots.size() - 1);
             }
 
             return indexSnapshots;

@@ -35,6 +35,8 @@ public class WebDataLoader implements WebLoaderAPI {
 
         String url = String.format(urlPattern, mode == SnapshotMode.OHLC ? "ohlc" : "close", startDate, endDate);
 
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(DateUtils.COIN_DESC_TZ));
+
         try {
             HttpGet httpGet = new HttpGet(url);
             HttpClient httpClient = new DefaultHttpClient();
@@ -51,35 +53,48 @@ public class WebDataLoader implements WebLoaderAPI {
             }
 
             DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            List<IndexSnapshot> indexSnapshots = new ArrayList<>(lines.size());
+            String dateOfEndDay = endDate.substring(8);
+            int hourOfEndDay = new Date().getHours() - DateUtils.COIN_DESC_HOUR_DIFFERENCE;
+
+            List<IndexSnapshot> indexSnapshots = new ArrayList<>();
+
             for (int i = 1; i < lines.size() - 3; i++) {
                 String line = (String) lines.get(i);
 
                 if (resolution == HOUR) {
+                    String hour = line.substring(12, 14);
+                    String day = line.substring(9, 11);
+
+                    if (!day.equals(dateOfEndDay) && Integer.valueOf(hour) < hourOfEndDay) {
+                        continue;
+                    }
+
                     String minute = line.substring(15, 17);
                     if (!"00".equals(minute)) {
                         continue;
                     }
                 }
 
+                String dateStr = line.substring(1, 20);
+                String valueStr = line.substring(22);
+
+                Date date = dateFormat.parse(dateStr);
+                calendar.setTime(date);
+                calendar.add(Calendar.HOUR, DateUtils.COIN_DESC_HOUR_DIFFERENCE);
+
                 IndexSnapshot indexSnapshot;
                 if (mode == SnapshotMode.CLOSING_PRICE) {
-                    String dateStr = line.substring(1, 20);
-                    String valueStr = line.substring(22);
-
-                    indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr), Double.valueOf(valueStr));
+                    indexSnapshot = new IndexSnapshot(calendar.getTime(), Double.valueOf(valueStr));
                 } else {
-                    String dateStr = line.substring(1, 20);
-                    String valuesStr = line.substring(22);
-                    String[] ohlc = valuesStr.split(",");
+                    String[] ohlc = valueStr.split(",");
 
-                    indexSnapshot = new IndexSnapshot(dateFormat.parse(dateStr),
+                    indexSnapshot = new IndexSnapshot(calendar.getTime(),
                             Double.valueOf(ohlc[0]), Double.valueOf(ohlc[1]), Double.valueOf(ohlc[2]), Double.valueOf(ohlc[3]));
                 }
                 indexSnapshots.add(indexSnapshot);
             }
 
-            if (DateUtils.format(new Date()).equals(endDate)) {
+            if (resolution == DAY && DateUtils.format(new Date()).equals(endDate)) {
                 indexSnapshots.remove(indexSnapshots.size() - 1);
             }
 

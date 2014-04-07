@@ -33,9 +33,11 @@ public class AppFrameCL extends JFrame {
 
     protected JLabel usdValue;
     protected JLabel usdDiffValue;
-    protected JLabel eurValue;
-    protected JLabel eurDiffValue;
     protected JLabel rateTsLabel;
+
+    protected JButton dayModeBtn = new JButton(Messages.get("day"));
+    protected JButton monthModeBtn = new JButton(Messages.get("month"));
+    protected JButton yearModeBtn = new JButton(Messages.get("year"));
 
     protected String H1_PATTERN = "<html><h1><b>%s</b></h1></html>";
     protected String H2_PATTERN = "<html><h2><b>%s</b></h2></html>";

@@ -16,6 +16,9 @@ public class DateUtils {
     protected static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
     protected static final DateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    public static final int COIN_DESC_HOUR_DIFFERENCE = 4; //todo conf
+    public static final String COIN_DESC_TZ = "Etc/GMT+1";
+
     private static ThreadLocal<Calendar> calendar = new ThreadLocal<Calendar>() {
         @Override
         protected Calendar initialValue() {

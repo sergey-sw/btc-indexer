@@ -88,7 +88,7 @@ public class CurrentPriceProvider {
                 Price price = new Price();
                 price.ts = date;
                 price.usdDouble = bpi.getDouble(date);
-                price.USD = formatter.format(price.usdDouble);
+                price.USD = "$ " + formatter.format(price.usdDouble);
                 prices.add(price);
             }
             Collections.sort(prices, new Comparator<Price>() {

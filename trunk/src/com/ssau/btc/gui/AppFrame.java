@@ -43,8 +43,14 @@ public class AppFrame extends AppFrameCL {
             public void run() {
                 currentPrice = currentPriceProvider.getCurrentPrice();
                 usdValue.setText(String.format(H1_PATTERN, currentPrice.USD));
-                /*eurValue.setText(String.format(H1_PATTERN, currentPrice.EUR));*/
-                updateCurrentPriceDiff();
+                if (prevUSDValue != null) {
+                    usdDiffValue.setText(String.format(H1_PATTERN, currentPrice.calcDiff(prevUSDValue)));
+                    if (currentPrice.diff.startsWith("+")) {
+                        usdDiffValue.setForeground(green);
+                    } else {
+                        usdDiffValue.setForeground(Color.RED);
+                    }
+                }
             }
         }, 10, TimeUnit.SECONDS);
         threadManager.scheduleTask(new Runnable() {
@@ -80,7 +86,6 @@ public class AppFrame extends AppFrameCL {
 
         initInfoTab();
         initStructureTab();
-        initChartTab();
         initMistakeTab();
 
         add(jTabbedPane);
@@ -107,13 +112,6 @@ public class AppFrame extends AppFrameCL {
         usdDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
         ratesPanel.add(usdDiffValue);
 
-        /*JLabel eurLabel = new JLabel(String.format(H1_PATTERN, "EUR"));
-        eurValue = new JLabel(String.format(H1_PATTERN, "..."));
-        ratesPanel.add(eurLabel);
-        ratesPanel.add(eurValue);
-        eurDiffValue = new JLabel(String.format(H1_PATTERN, "..."));
-        ratesPanel.add(eurDiffValue);*/
-
         ratesPanel.add(new JLabel());
         ratesPanel.add(new JLabel());
         ratesPanel.add(new JLabel());
@@ -135,9 +133,23 @@ public class AppFrame extends AppFrameCL {
         infoPanel.add(ratesPanel);
 
         JPanel chartJPanel = new JPanel();
+        BoxLayout chartBoxLayout = new BoxLayout(chartJPanel, BoxLayout.Y_AXIS);
+        chartJPanel.setLayout(chartBoxLayout);
+
+        //todo modes
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonsPanel.add(dayModeBtn);
+        buttonsPanel.add(monthModeBtn);
+        buttonsPanel.add(yearModeBtn);
+        dayModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.DAY));
+        monthModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.MONTH));
+        yearModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.YEAR));
+        chartJPanel.add(buttonsPanel);
+
         String to = DateUtils.format(new Date());
         String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.HOUR ,-24));
 
+        //todo background
         Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.HOUR);
         TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
         JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
@@ -234,25 +246,6 @@ public class AppFrame extends AppFrameCL {
         jTabbedPane.addTab(Messages.get("settingTab"), structurePanel);
     }
 
-    protected void initChartTab() {
-        JPanel chartJPanel = new JPanel(new FlowLayout());
-        jTabbedPane.addTab("Chart", chartJPanel);
-
-        String to = DateUtils.format(new Date());
-        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.DATE, -HISTORY_DAY_COUNT - 1));
-
-        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
-        TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
-        JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
-
-        final ChartPanel chartPanel = new ChartPanel(chart);
-        Dimension screenSize = getToolkit().getScreenSize();
-        Dimension chartSize = new Dimension(Double.valueOf(screenSize.width * 0.5).intValue(), Double.valueOf(screenSize.height * 0.52).intValue());
-        chartPanel.setMaximumSize(chartSize);
-
-        chartJPanel.add(chartPanel);
-    }
-
     protected void initMistakeTab() {
         JPanel chartJPanel = new JPanel(new FlowLayout());
         jTabbedPane.addTab("Mistakes", chartJPanel);
@@ -282,18 +275,6 @@ public class AppFrame extends AppFrameCL {
         chartPanel.setPreferredSize(chartSize);
 
         chartJPanel.add(chartPanel);
-    }
-
-    protected void updateCurrentPriceDiff() {
-        if (prevUSDValue != null) {
-            usdDiffValue.setText(String.format(H1_PATTERN, currentPrice.calcDiff(prevUSDValue)));
-            if (currentPrice.diff.startsWith("+")) {
-                usdDiffValue.setForeground(green);
-            } else {
-                usdDiffValue.setForeground(Color.RED);
-            }
-//            eurDiffValue.setText(usdDiffValue.getText());
-        }
     }
 
     protected class AddLayerHandler implements ActionListener {
@@ -331,6 +312,23 @@ public class AppFrame extends AppFrameCL {
             }
 
             addLayerBtn.setEnabled(true);
+        }
+    }
+
+    protected class ModeChangeHandler implements ActionListener {
+
+        int mode;
+        public static final int DAY = 0;
+        public static final int MONTH = 1;
+        public static final int YEAR = 2;
+
+        public ModeChangeHandler(int mode) {
+            this.mode = mode;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
         }
     }
 }

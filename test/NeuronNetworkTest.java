@@ -1,11 +1,9 @@
-import com.ssau.btc.gui.Config;
 import com.ssau.btc.model.*;
 import com.ssau.btc.sys.WebDataLoader;
 import com.ssau.btc.sys.WebLoaderAPI;
 import org.junit.Test;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Author: Sergey42
@@ -37,20 +35,6 @@ public class NeuronNetworkTest {
     }
 
     private NetworkAPI createNetwork() {
-        List<LayerInfo> defaultStructure = Config.getDefaultStructure();
-
-        int size = defaultStructure.size();
-
-        int[] neuronCounts = new int[size];
-        ActivationFunctionType[] types = new ActivationFunctionType[size];
-        double[] coefficients = new double[size];
-
-        for (int i = 0; i < size; i++) {
-            neuronCounts[i] = defaultStructure.get(i).neuronCnt;
-            types[i] = defaultStructure.get(i).functionType;
-            coefficients[i] = defaultStructure.get(i).coefficient;
-        }
-
-        return NetworkCreator.create(neuronCounts, types, coefficients);
+        return NetworkCreator.buildDefault();
     }
 }

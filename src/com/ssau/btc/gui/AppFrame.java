@@ -4,6 +4,8 @@ import com.intelli.ray.core.Inject;
 import com.intelli.ray.core.ManagedComponent;
 import com.ssau.btc.model.*;
 import com.ssau.btc.sys.*;
+import net.sourceforge.jdatepicker.JDateComponentFactory;
+import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -35,6 +37,8 @@ public class AppFrame extends AppFrameCL {
     protected ThreadManager threadManager;
     @Inject
     protected WebLoaderAPI webDataLoader;
+
+    protected NetworkAPI currentNetwork;
 
     public void postInit() {
         initComponents();
@@ -147,7 +151,7 @@ public class AppFrame extends AppFrameCL {
         chartJPanel.add(buttonsPanel);
 
         String to = DateUtils.format(new Date());
-        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.HOUR ,-24));
+        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.HOUR, -24));
 
         //todo background
         Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.HOUR);
@@ -168,27 +172,46 @@ public class AppFrame extends AppFrameCL {
     }
 
     protected void initStructureTab() {
-        structurePanel = new JPanel();
-        FlowLayout settingsPanelLayout = new FlowLayout(FlowLayout.LEFT);
-        settingsPanelLayout.setVgap(MARGIN);
-        settingsPanelLayout.setHgap(MARGIN);
-        structurePanel.setLayout(settingsPanelLayout);
+        structurePanelMainLayout = new JPanel();
+        FlowLayout structurePanelLayout = new FlowLayout(FlowLayout.LEFT);
+        structurePanelLayout.setVgap(MARGIN);
+        structurePanelLayout.setHgap(MARGIN);
+        structurePanelMainLayout.setLayout(structurePanelLayout);
 
-        JPanel tablePanelOuter = new JPanel();
-        BoxLayout tableLayout = new BoxLayout(tablePanelOuter, BoxLayout.Y_AXIS);
-        tablePanelOuter.setLayout(tableLayout);
-        tablePanelOuter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        JPanel structureVPanel = new JPanel();
+        BoxLayout structurePanelBoxLayout = new BoxLayout(structureVPanel, BoxLayout.Y_AXIS);
+        structureVPanel.setLayout(structurePanelBoxLayout);
+        structurePanelMainLayout.add(structureVPanel);
 
-        JPanel tablePanelInner = new JPanel();
+        JPanel netButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        createNetBtn = new JButton(Messages.get("newNet"));
+        createNetBtn.addActionListener(new CreateNetButtonHandler());
+        netButtonsPanel.add(createNetBtn);
+        loadNetBtn = new JButton(Messages.get("loadNet"));
+        loadNetBtn.addActionListener(new LoadNetButtonHandler());
+        netButtonsPanel.add(loadNetBtn);
+        saveNetBtn = new JButton(Messages.get("saveNet"));
+        saveNetBtn.addActionListener(new SaveNetButtonHandler());
+        saveNetBtn.setEnabled(false);
+        netButtonsPanel.add(saveNetBtn);
+        structureVPanel.add(netButtonsPanel);
+
+        structureTablePanelOuter = new JPanel();
+        structureTablePanelOuter.setVisible(false);
+        BoxLayout tableLayout = new BoxLayout(structureTablePanelOuter, BoxLayout.Y_AXIS);
+        structureTablePanelOuter.setLayout(tableLayout);
+        structureTablePanelOuter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JPanel structureTablePanelInner = new JPanel();
         FlowLayout tablePanelInnerLayout = new FlowLayout(FlowLayout.LEFT);
-        tablePanelInner.setLayout(tablePanelInnerLayout);
+        structureTablePanelInner.setLayout(tablePanelInnerLayout);
 
         JLabel tableLabel = new JLabel(Messages.get("tableLabelCaption"));
-        tablePanelOuter.add(tableLabel);
-        tablePanelOuter.add(Box.createVerticalStrut(10));
-        tablePanelOuter.add(Box.createHorizontalStrut(10));
+        structureTablePanelOuter.add(tableLabel);
+        structureTablePanelOuter.add(Box.createVerticalStrut(10));
+        structureTablePanelOuter.add(Box.createHorizontalStrut(10));
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel layerButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         addLayerBtn = new JButton(Messages.get("addLayer"));
         addLayerBtn.addActionListener(new AddLayerHandler());
         removeLayerBtn = new JButton(Messages.get("removeLayer"));
@@ -196,10 +219,10 @@ public class AppFrame extends AppFrameCL {
         removeLayerBtn.setEnabled(false);
         standardLayersBtn = new JButton(Messages.get("standardLayers"));
         standardLayersBtn.addActionListener(new StandardLayerHandler());
-        buttonsPanel.add(addLayerBtn);
-        buttonsPanel.add(removeLayerBtn);
-        buttonsPanel.add(standardLayersBtn);
-        tablePanelOuter.add(buttonsPanel);
+        layerButtonsPanel.add(addLayerBtn);
+        layerButtonsPanel.add(removeLayerBtn);
+        layerButtonsPanel.add(standardLayersBtn);
+        structureTablePanelOuter.add(layerButtonsPanel);
 
         structureTableModel = new SettingsTableModel();
         for (LayerInfo layerInfo : Config.getDefaultStructure()) {
@@ -238,12 +261,37 @@ public class AppFrame extends AppFrameCL {
         }
         column1.setCellEditor(new DefaultCellEditor(box));
 
-        tablePanelInner.add(structureTable);
-        tablePanelOuter.add(tablePanelInner);
+        structureTablePanelInner.add(structureTable);
+        structureTablePanelOuter.add(structureTablePanelInner);
 
-        structurePanel.add(tablePanelOuter);
+        structureTablePanelOuter.add(Box.createVerticalStrut(10));
 
-        jTabbedPane.addTab(Messages.get("settingTab"), structurePanel);
+        JPanel buildNetButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buildNetBtn = new JButton(Messages.get("buildNet"));
+        buildNetBtn.addActionListener(new BuildNetButtonHandler());
+        buildNetButtonPanel.add(buildNetBtn);
+        structureTablePanelOuter.add(buildNetButtonPanel);
+
+        teachPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        teachPanel.setVisible(false);
+        teachPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JLabel dateFrom = new JLabel(Messages.get("dateFrom"));
+        JDatePickerImpl fromDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        teachPanel.add(dateFrom);
+        teachPanel.add(fromDatePicker);
+
+        JLabel dateTill = new JLabel(Messages.get("dateTill"));
+        JDatePickerImpl tillDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        teachPanel.add(dateTill);
+        teachPanel.add(tillDatePicker);
+
+        structureTablePanelOuter.add(teachPanel);
+
+        structureVPanel.add(structureTablePanelOuter);
+        structurePanelMainLayout.add(structureVPanel);
+
+        jTabbedPane.addTab(Messages.get("settingTab"), structurePanelMainLayout);
     }
 
     protected void initMistakeTab() {
@@ -275,6 +323,15 @@ public class AppFrame extends AppFrameCL {
         chartPanel.setPreferredSize(chartSize);
 
         chartJPanel.add(chartPanel);
+    }
+
+    protected void setStructurePanelEnabled(boolean enabled) {
+        structureTable.getSelectionModel().clearSelection();
+        structureTable.setEnabled(enabled);
+        addLayerBtn.setVisible(enabled);
+        removeLayerBtn.setVisible(enabled);
+        standardLayersBtn.setVisible(enabled);
+        buildNetBtn.setVisible(enabled);
     }
 
     protected class AddLayerHandler implements ActionListener {
@@ -329,6 +386,89 @@ public class AppFrame extends AppFrameCL {
         @Override
         public void actionPerformed(ActionEvent e) {
 
+        }
+    }
+
+    protected class CreateNetButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            standardLayersBtn.doClick();
+            structureTablePanelOuter.setVisible(true);
+            setStructurePanelEnabled(true);
+            teachPanel.setVisible(false);
+
+            saveNetBtn.setEnabled(true);
+        }
+    }
+
+    protected class SaveNetButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            System.out.println("Not implemented");
+        }
+    }
+
+    protected class LoadNetButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            System.out.println("Not implemented");
+        }
+    }
+
+    protected class BuildNetButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (validate()) {
+                currentNetwork = NetworkCreator.create(structureTableModel.items);
+
+                setStructurePanelEnabled(false);
+                teachPanel.setVisible(true);
+            }
+        }
+
+        protected boolean validate() {
+            int i = 0;
+            for (LayerInfo layerInfo : structureTableModel.items) {
+                if (layerInfo.functionType == null && i != 0) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.format("error.functionTypeIsNull", i + 1),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                if (layerInfo.neuronCnt < 0 && i != 0) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.format("error.negativeNeuronCount", i + 1),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                if (layerInfo.neuronCnt > Config.MAX_LAYER_NEURON_CNT) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.format("error.maxNeuronCount", i + 1, Config.MAX_LAYER_NEURON_CNT),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                if (layerInfo.coefficient <= -1 || layerInfo.coefficient >= 1) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.format("error.invalidActivateCoefficient", i + 1),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+                ++i;
+            }
+
+            return true;
         }
     }
 }

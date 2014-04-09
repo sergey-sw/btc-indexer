@@ -8,6 +8,8 @@ import java.util.Random;
  */
 public class Network implements NetworkAPI {
 
+    private static final long serialVersionUID = 5201280714110288780L;
+
     public double[] inputs;
     public double[] nInputs;
 

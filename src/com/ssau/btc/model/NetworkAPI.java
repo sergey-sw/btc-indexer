@@ -1,10 +1,12 @@
 package com.ssau.btc.model;
 
+import java.io.Serializable;
+
 /**
  * Author: Sergey42
  * Date: 05.03.14 21:15
  */
-public interface NetworkAPI {
+public interface NetworkAPI extends Serializable {
 
     void teach();
 

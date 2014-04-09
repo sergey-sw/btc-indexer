@@ -29,7 +29,8 @@ public class AppFrameCL extends JFrame {
     protected JButton standardLayersBtn;
     protected SettingsTableModel structureTableModel;
     protected JTable structureTable;
-    protected JPanel structurePanel;
+    protected JPanel structurePanelMainLayout;
+    protected JPanel structureTablePanelOuter;
 
     protected JLabel usdValue;
     protected JLabel usdDiffValue;
@@ -38,6 +39,13 @@ public class AppFrameCL extends JFrame {
     protected JButton dayModeBtn = new JButton(Messages.get("day"));
     protected JButton monthModeBtn = new JButton(Messages.get("month"));
     protected JButton yearModeBtn = new JButton(Messages.get("year"));
+
+    protected JButton createNetBtn;
+    protected JButton loadNetBtn;
+    protected JButton saveNetBtn;
+    protected JButton buildNetBtn;
+
+    protected JPanel teachPanel;
 
     protected String H1_PATTERN = "<html><h1><b>%s</b></h1></html>";
     protected String H2_PATTERN = "<html><h2><b>%s</b></h2></html>";
@@ -70,6 +78,19 @@ public class AppFrameCL extends JFrame {
     protected void initLocation() {
         setTitle(Messages.get("title"));
         setSize(getToolkit().getScreenSize());
+    }
+
+    /**
+     * @param caption
+     * @param message
+     * @param messageType <code>ERROR_MESSAGE</code>,
+     *                    <code>INFORMATION_MESSAGE</code>,
+     *                    <code>WARNING_MESSAGE</code>,
+     *                    <code>QUESTION_MESSAGE</code>,
+     *                    or <code>PLAIN_MESSAGE</code>
+     */
+    protected void showMessage(String caption, String message, int messageType) {
+        JOptionPane.showMessageDialog(this, message, caption, messageType);
     }
 
     protected class SettingsTableModel extends DefaultTableModel {

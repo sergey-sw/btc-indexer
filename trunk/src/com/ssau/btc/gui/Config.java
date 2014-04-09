@@ -12,6 +12,8 @@ import java.util.List;
  */
 public class Config {
 
+    public static final int MAX_LAYER_NEURON_CNT = 100;
+
     public static List<LayerInfo> getDefaultStructure() {
         List<LayerInfo> items = new ArrayList<>();
         items.add(new LayerInfo(8, null, 0));

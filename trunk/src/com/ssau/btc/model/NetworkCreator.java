@@ -11,18 +11,19 @@ import java.util.Random;
  */
 public class NetworkCreator {
 
-    public static Network create(int[] layers, ActivationFunctionType[] activationFunctionTypes, double[] params) {
+    public static Network create(List<LayerInfo> layerInfos) {
+
+        int[] layers = new int[layerInfos.size()];
+        ActivationFunctionType[] activationFunctionTypes = new ActivationFunctionType[layerInfos.size()];
+        double[] params = new double[layerInfos.size()];
+
+        for (int i = 0; i < layerInfos.size(); i++) {
+            layers[i] = layerInfos.get(i).neuronCnt;
+            activationFunctionTypes[i] = layerInfos.get(i).functionType;
+            params[i] = layerInfos.get(i).coefficient;
+        }
 
         Random random = new Random();
-        for (int t : layers) {
-            if (t < 0)
-                throw new IllegalArgumentException("Некорректно введенные данные : " + t);
-        }
-        for (double param : params) {
-            if (param > 1 || param < -1) {
-                throw new IllegalArgumentException("Некорректное значение параметра : " + param);
-            }
-        }
 
         int layersCount = layers.length - 1;
         int[] mArray = new int[layersCount];
@@ -92,20 +93,6 @@ public class NetworkCreator {
     }
 
     public static Network buildDefault() {
-        List<LayerInfo> defaultStructure = Config.getDefaultStructure();
-
-        int size = defaultStructure.size();
-
-        int[] neuronCounts = new int[size];
-        ActivationFunctionType[] types = new ActivationFunctionType[size];
-        double[] coefficients = new double[size];
-
-        for (int i = 0; i < size; i++) {
-            neuronCounts[i] = defaultStructure.get(i).neuronCnt;
-            types[i] = defaultStructure.get(i).functionType;
-            coefficients[i] = defaultStructure.get(i).coefficient;
-        }
-
-        return create(neuronCounts, types, coefficients);
+        return create(Config.getDefaultStructure());
     }
 }

@@ -89,7 +89,7 @@ public class AppFrame extends AppFrameCL {
         jTabbedPane = new JTabbedPane();
 
         initInfoTab();
-        initStructureTab();
+        initNetworkTab();
         initMistakeTab();
 
         add(jTabbedPane);
@@ -141,7 +141,7 @@ public class AppFrame extends AppFrameCL {
         chartJPanel.setLayout(chartBoxLayout);
 
         //todo modes
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel buttonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         buttonsPanel.add(dayModeBtn);
         buttonsPanel.add(monthModeBtn);
         buttonsPanel.add(yearModeBtn);
@@ -171,19 +171,15 @@ public class AppFrame extends AppFrameCL {
         jTabbedPane.addTab(Messages.get("infoTab"), infoPanel);
     }
 
-    protected void initStructureTab() {
-        structurePanelMainLayout = new JPanel();
-        FlowLayout structurePanelLayout = new FlowLayout(FlowLayout.LEFT);
-        structurePanelLayout.setVgap(MARGIN);
-        structurePanelLayout.setHgap(MARGIN);
-        structurePanelMainLayout.setLayout(structurePanelLayout);
+    protected void initNetworkTab() {
+        networkMainPanel = new JPanel(MARGIN_FLOW_LAYOUT);
 
-        JPanel structureVPanel = new JPanel();
-        BoxLayout structurePanelBoxLayout = new BoxLayout(structureVPanel, BoxLayout.Y_AXIS);
-        structureVPanel.setLayout(structurePanelBoxLayout);
-        structurePanelMainLayout.add(structureVPanel);
+        JPanel networkVPanel = new JPanel();
+        BoxLayout networkPanelBoxLayout = new BoxLayout(networkVPanel, BoxLayout.Y_AXIS);
+        networkVPanel.setLayout(networkPanelBoxLayout);
+        networkMainPanel.add(networkVPanel);
 
-        JPanel netButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel netButtonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         createNetBtn = new JButton(Messages.get("newNet"));
         createNetBtn.addActionListener(new CreateNetButtonHandler());
         netButtonsPanel.add(createNetBtn);
@@ -194,24 +190,22 @@ public class AppFrame extends AppFrameCL {
         saveNetBtn.addActionListener(new SaveNetButtonHandler());
         saveNetBtn.setEnabled(false);
         netButtonsPanel.add(saveNetBtn);
-        structureVPanel.add(netButtonsPanel);
+        networkVPanel.add(netButtonsPanel);
 
-        structureTablePanelOuter = new JPanel();
+        structureTablePanelOuter = new JPanel(MARGIN_FLOW_LAYOUT);
         structureTablePanelOuter.setVisible(false);
-        BoxLayout tableLayout = new BoxLayout(structureTablePanelOuter, BoxLayout.Y_AXIS);
-        structureTablePanelOuter.setLayout(tableLayout);
         structureTablePanelOuter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         JPanel structureTablePanelInner = new JPanel();
-        FlowLayout tablePanelInnerLayout = new FlowLayout(FlowLayout.LEFT);
+        structureTablePanelOuter.add(structureTablePanelInner);
+        BoxLayout tablePanelInnerLayout = new BoxLayout(structureTablePanelInner, BoxLayout.Y_AXIS);
         structureTablePanelInner.setLayout(tablePanelInnerLayout);
 
         JLabel tableLabel = new JLabel(Messages.get("tableLabelCaption"));
-        structureTablePanelOuter.add(tableLabel);
-        structureTablePanelOuter.add(Box.createVerticalStrut(10));
-        structureTablePanelOuter.add(Box.createHorizontalStrut(10));
+        structureTablePanelInner.add(tableLabel);
+        structureTablePanelInner.add(Box.createVerticalStrut(10));
 
-        JPanel layerButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel layerButtonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         addLayerBtn = new JButton(Messages.get("addLayer"));
         addLayerBtn.addActionListener(new AddLayerHandler());
         removeLayerBtn = new JButton(Messages.get("removeLayer"));
@@ -222,7 +216,7 @@ public class AppFrame extends AppFrameCL {
         layerButtonsPanel.add(addLayerBtn);
         layerButtonsPanel.add(removeLayerBtn);
         layerButtonsPanel.add(standardLayersBtn);
-        structureTablePanelOuter.add(layerButtonsPanel);
+        structureTablePanelInner.add(layerButtonsPanel);
 
         structureTableModel = new SettingsTableModel();
         for (LayerInfo layerInfo : Config.getDefaultStructure()) {
@@ -261,37 +255,75 @@ public class AppFrame extends AppFrameCL {
         }
         column1.setCellEditor(new DefaultCellEditor(box));
 
-        structureTablePanelInner.add(structureTable);
-        structureTablePanelOuter.add(structureTablePanelInner);
+        JPanel structureTableWrapper = new JPanel(SIMPLE_FLOW_LAYOUT);
+        structureTableWrapper.add(structureTable);
 
-        structureTablePanelOuter.add(Box.createVerticalStrut(10));
+        structureTablePanelInner.add(structureTableWrapper);
+        structureTablePanelInner.add(Box.createVerticalStrut(10));
 
-        JPanel buildNetButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        netStatePanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        netStatePanel.setVisible(false);
+
+        JLabel netStateCaption = new JLabel(Messages.get("netState"));
+        netStatePanel.add(netStateCaption);
+        netStateLabel = new JLabel();
+        netStatePanel.add(netStateLabel);
+        structureTablePanelInner.add(netStatePanel);
+
+        JPanel buildNetButtonPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         buildNetBtn = new JButton(Messages.get("buildNet"));
         buildNetBtn.addActionListener(new BuildNetButtonHandler());
         buildNetButtonPanel.add(buildNetBtn);
-        structureTablePanelOuter.add(buildNetButtonPanel);
+        structureTablePanelInner.add(buildNetButtonPanel);
 
-        teachPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        teachPanel.setVisible(false);
-        teachPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        teachPanelOuter = new JPanel(MARGIN_FLOW_LAYOUT);
+        teachPanelOuter.setVisible(false);
+        teachPanelOuter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JPanel teachPanelInner = new JPanel();
+        BoxLayout teachPanelInnerLayout = new BoxLayout(teachPanelInner, BoxLayout.Y_AXIS);
+        teachPanelInner.setLayout(teachPanelInnerLayout);
+        teachPanelOuter.add(teachPanelInner);
+
+        JLabel teachPanelLabel = new JLabel(Messages.get("teachPanel"));
+        teachPanelInner.add(teachPanelLabel);
+        teachPanelInner.add(Box.createVerticalStrut(MARGIN));
+
+        teachPanel = new JPanel(new GridLayout(5, 2, 10, 10));
 
         JLabel dateFrom = new JLabel(Messages.get("dateFrom"));
-        JDatePickerImpl fromDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        fromDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
         teachPanel.add(dateFrom);
         teachPanel.add(fromDatePicker);
 
         JLabel dateTill = new JLabel(Messages.get("dateTill"));
-        JDatePickerImpl tillDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        tillDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
         teachPanel.add(dateTill);
         teachPanel.add(tillDatePicker);
 
-        structureTablePanelOuter.add(teachPanel);
+        JLabel teachCoeffLabel = new JLabel(Messages.get("teachCoeff"));
+        teachCoeffTF = new JTextField(Config.DEFAULT_TEACH_COEFF);
+        teachPanel.add(teachCoeffLabel);
+        teachPanel.add(teachCoeffTF);
 
-        structureVPanel.add(structureTablePanelOuter);
-        structurePanelMainLayout.add(structureVPanel);
+        JLabel eraCntLabel = new JLabel(Messages.get("eraCount"));
+        eraCountTF = new JTextField(Config.DEFAULT_ERA_CNT);
+        teachPanel.add(eraCntLabel);
+        teachPanel.add(eraCountTF);
 
-        jTabbedPane.addTab(Messages.get("settingTab"), structurePanelMainLayout);
+        teachBtn = new JButton(Messages.get("teachBtn"));
+        teachBtn.addActionListener(new TeachNetButtonHandler());
+        teachPanel.add(teachBtn);
+
+        teachPanelInner.add(teachPanel);
+
+        networkVPanel.add(structureTablePanelOuter);
+        networkVPanel.add(Box.createVerticalStrut(10));
+        networkVPanel.add(teachPanelOuter);
+
+        networkMainPanel.add(networkVPanel);
+
+        jTabbedPane.addTab(Messages.get("settingTab"), networkMainPanel);
     }
 
     protected void initMistakeTab() {
@@ -332,6 +364,7 @@ public class AppFrame extends AppFrameCL {
         removeLayerBtn.setVisible(enabled);
         standardLayersBtn.setVisible(enabled);
         buildNetBtn.setVisible(enabled);
+        netStatePanel.setVisible(!enabled);
     }
 
     protected class AddLayerHandler implements ActionListener {
@@ -396,7 +429,7 @@ public class AppFrame extends AppFrameCL {
             standardLayersBtn.doClick();
             structureTablePanelOuter.setVisible(true);
             setStructurePanelEnabled(true);
-            teachPanel.setVisible(false);
+            teachPanelOuter.setVisible(false);
 
             saveNetBtn.setEnabled(true);
         }
@@ -426,7 +459,9 @@ public class AppFrame extends AppFrameCL {
                 currentNetwork = NetworkCreator.create(structureTableModel.items);
 
                 setStructurePanelEnabled(false);
-                teachPanel.setVisible(true);
+                teachPanelOuter.setVisible(true);
+
+                netStateLabel.setText(Messages.get("newNetState"));
             }
         }
 
@@ -466,6 +501,92 @@ public class AppFrame extends AppFrameCL {
                 }
 
                 ++i;
+            }
+
+            return true;
+        }
+    }
+
+    protected class TeachNetButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (validate()) {
+
+            }
+        }
+
+        protected boolean validate() {
+            Calendar from = (Calendar) fromDatePicker.getModel().getValue();
+            if (from == null) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.get("error.nullDateFrom"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            if (from.getTime().before(DateUtils.getDate(Config.MIN_DATE_FROM))) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.format("error.minDateFrom", Config.MIN_DATE_FROM),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            Calendar till = (Calendar) tillDatePicker.getModel().getValue();
+            if (till == null) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.get("error.nullDateTill"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            if (till.getTime().after(new Date())) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.get("error.maxDateTill"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            try {
+                int eraCnt = Integer.valueOf(eraCountTF.getText());
+
+                if (eraCnt <= 0 || eraCnt > Config.MAX_ERA_COUNT) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.format("error.badEraCnt", Config.MAX_ERA_COUNT),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+            } catch (Exception ex) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.get("error.invalidEraCnt"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            try {
+                double teachCoeff = Double.valueOf(teachCoeffTF.getText());
+
+                if (teachCoeff <= 0 || teachCoeff >= 1) {
+                    showMessage(
+                            Messages.get("error"),
+                            Messages.get("error.badTeachCoeff"),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+            } catch (Exception ex) {
+                showMessage(
+                        Messages.get("error"),
+                        Messages.get("error.invalidTeachCoeff"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
             }
 
             return true;

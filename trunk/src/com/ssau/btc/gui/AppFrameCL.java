@@ -4,6 +4,7 @@ import com.ssau.btc.model.ActivationFunctionType;
 import com.ssau.btc.model.LayerInfo;
 import com.ssau.btc.sys.CurrentPriceProvider;
 import com.ssau.btc.sys.Messages;
+import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -29,7 +30,7 @@ public class AppFrameCL extends JFrame {
     protected JButton standardLayersBtn;
     protected SettingsTableModel structureTableModel;
     protected JTable structureTable;
-    protected JPanel structurePanelMainLayout;
+    protected JPanel networkMainPanel;
     protected JPanel structureTablePanelOuter;
 
     protected JLabel usdValue;
@@ -44,8 +45,19 @@ public class AppFrameCL extends JFrame {
     protected JButton loadNetBtn;
     protected JButton saveNetBtn;
     protected JButton buildNetBtn;
+    protected JPanel netStatePanel;
+    protected JLabel netStateLabel;
 
     protected JPanel teachPanel;
+    protected JPanel teachPanelOuter;
+    protected JDatePickerImpl fromDatePicker;
+    protected JDatePickerImpl tillDatePicker;
+    protected JTextField teachCoeffTF;
+    protected JTextField eraCountTF;
+    protected JButton teachBtn;
+
+    protected FlowLayout SIMPLE_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
+    protected FlowLayout MARGIN_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
 
     protected String H1_PATTERN = "<html><h1><b>%s</b></h1></html>";
     protected String H2_PATTERN = "<html><h2><b>%s</b></h2></html>";
@@ -62,6 +74,9 @@ public class AppFrameCL extends JFrame {
     protected volatile Double prevUSDValue;
 
     public AppFrameCL() {
+        MARGIN_FLOW_LAYOUT.setHgap(MARGIN);
+        MARGIN_FLOW_LAYOUT.setVgap(MARGIN);
+
         initBase();
         initLocation();
     }
@@ -80,15 +95,6 @@ public class AppFrameCL extends JFrame {
         setSize(getToolkit().getScreenSize());
     }
 
-    /**
-     * @param caption
-     * @param message
-     * @param messageType <code>ERROR_MESSAGE</code>,
-     *                    <code>INFORMATION_MESSAGE</code>,
-     *                    <code>WARNING_MESSAGE</code>,
-     *                    <code>QUESTION_MESSAGE</code>,
-     *                    or <code>PLAIN_MESSAGE</code>
-     */
     protected void showMessage(String caption, String message, int messageType) {
         JOptionPane.showMessageDialog(this, message, caption, messageType);
     }

@@ -60,8 +60,8 @@ public class Network implements NetworkAPI {
     private Random random = new Random();
 
     public Interval interval;
-    private boolean inputDataInitialized = false;
-    private boolean studyComplete = false;
+
+    public NetState netState = NetState.NEW;
 
     /* Maps value from interval [A;B] to interval [-1;1] */
     private double normalize(double value) {
@@ -524,8 +524,6 @@ public class Network implements NetworkAPI {
         for (int i = 0; i < nInputs.length; i++) {
             nInputs[i] = normalize(inputs[i]);
         }
-
-        inputDataInitialized = true;
     }
 
     @Override

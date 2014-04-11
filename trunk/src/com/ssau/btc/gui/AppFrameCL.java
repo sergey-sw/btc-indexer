@@ -56,6 +56,12 @@ public class AppFrameCL extends JFrame {
     protected JTextField eraCountTF;
     protected JButton teachBtn;
 
+    protected JPanel forecastPanel;
+    protected JPanel forecastPanelOuter;
+    protected JTextField forecastSizeTF;
+    protected JButton forecastBtn;
+    protected JTextField forecastDateTF;
+
     protected FlowLayout SIMPLE_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
     protected FlowLayout MARGIN_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
 

@@ -317,9 +317,43 @@ public class AppFrame extends AppFrameCL {
 
         teachPanelInner.add(teachPanel);
 
+        forecastPanelOuter = new JPanel(SIMPLE_FLOW_LAYOUT);
+        forecastPanelOuter.setVisible(false);
+        forecastPanelOuter.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        JPanel forecastPanelInner = new JPanel();
+        BoxLayout forecastPanelInnerLayout = new BoxLayout(forecastPanelInner, BoxLayout.Y_AXIS);
+        forecastPanelInner.setLayout(forecastPanelInnerLayout);
+        forecastPanelOuter.add(forecastPanelInner);
+
+        JLabel forecastLabel = new JLabel(Messages.get("forecastPanel"));
+        forecastPanelInner.add(forecastLabel);
+        forecastPanelInner.add(Box.createVerticalStrut(MARGIN));
+
+        JPanel forecastParamsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        forecastPanelInner.add(forecastParamsPanel);
+
+        JLabel forecastDateFrom = new JLabel(Messages.get("dateFrom"));
+        forecastDateTF = new JTextField();
+        forecastDateTF.setFocusable(false);
+        forecastDateTF.setPreferredSize(fromDatePicker.getPreferredSize());
+        forecastParamsPanel.add(forecastDateFrom);
+        forecastParamsPanel.add(forecastDateTF);
+
+        JLabel forecastSizeLabel = new JLabel(Messages.get("forecastSize"));
+        forecastParamsPanel.add(forecastSizeLabel);
+        forecastSizeTF = new JTextField(Config.DEFAULT_FORECAST_SIZE);
+        forecastParamsPanel.add(forecastSizeTF);
+
+        forecastBtn = new JButton(Messages.get("forecastBtn"));
+        forecastBtn.addActionListener(new ForecastButtonHandler());
+        forecastParamsPanel.add(forecastBtn);
+
         networkVPanel.add(structureTablePanelOuter);
         networkVPanel.add(Box.createVerticalStrut(10));
         networkVPanel.add(teachPanelOuter);
+        networkVPanel.add(Box.createVerticalStrut(10));
+        networkVPanel.add(forecastPanelOuter);
 
         networkMainPanel.add(networkVPanel);
 
@@ -512,7 +546,11 @@ public class AppFrame extends AppFrameCL {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (validate()) {
+                //todo teaching
+                Calendar calendar = (Calendar) tillDatePicker.getModel().getValue();
+                forecastDateTF.setText(DateUtils.format(calendar.getTime()));
 
+                forecastPanelOuter.setVisible(true);
             }
         }
 
@@ -586,6 +624,34 @@ public class AppFrame extends AppFrameCL {
                         Messages.get("error"),
                         Messages.get("error.invalidTeachCoeff"),
                         JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    protected class ForecastButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (validate()) {
+
+            }
+        }
+
+        protected boolean validate() {
+            String forecastSize = forecastSizeTF.getText();
+            try {
+                int value = Integer.valueOf(forecastSize);
+
+                if (value <= 0) {
+                    showMessage(Messages.get("error"), Messages.get("error.badForecastSize"), JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+
+            } catch (Exception ex) {
+                showMessage(Messages.get("error"), Messages.get("error.invalidForecastSize"), JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 

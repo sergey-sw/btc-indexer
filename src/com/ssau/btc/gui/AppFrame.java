@@ -150,11 +150,8 @@ public class AppFrame extends AppFrameCL {
         yearModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.YEAR));
         chartJPanel.add(buttonsPanel);
 
-        String to = DateUtils.format(new Date());
-        String from = DateUtils.format(DateUtils.calcDate(new Date(), Calendar.HOUR, -24));
-
         //todo background
-        Collection<IndexSnapshot> indexSnapshots = webDataLoader.loadCoinDeskIndexes(from, to, SnapshotMode.CLOSING_PRICE, WebLoaderAPI.HOUR);
+        Collection<IndexSnapshot> indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
         TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
         JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
 
@@ -173,6 +170,7 @@ public class AppFrame extends AppFrameCL {
 
     protected void initNetworkTab() {
         networkMainPanel = new JPanel(MARGIN_FLOW_LAYOUT);
+        JScrollPane scrollPane = new JScrollPane(networkMainPanel);
 
         JPanel networkVPanel = new JPanel();
         BoxLayout networkPanelBoxLayout = new BoxLayout(networkVPanel, BoxLayout.Y_AXIS);
@@ -357,7 +355,7 @@ public class AppFrame extends AppFrameCL {
 
         networkMainPanel.add(networkVPanel);
 
-        jTabbedPane.addTab(Messages.get("settingTab"), networkMainPanel);
+        jTabbedPane.addTab(Messages.get("settingTab"), scrollPane);
     }
 
     protected void initMistakeTab() {

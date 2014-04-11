@@ -4,6 +4,7 @@ import com.ssau.btc.model.IndexSnapshot;
 import com.ssau.btc.model.SnapshotMode;
 
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Author: Sergey42
@@ -17,4 +18,8 @@ public interface WebLoaderAPI {
     int HOUR = 1;
 
     Collection<IndexSnapshot> loadCoinDeskIndexes(String startDate, String endDate, SnapshotMode mode, int resolution);
+
+    Collection<IndexSnapshot> load24HourIndexes(SnapshotMode mode);
+
+    Collection<IndexSnapshot> loadDayIndexes(int days, Date startDate, SnapshotMode snapshotMode);
 }

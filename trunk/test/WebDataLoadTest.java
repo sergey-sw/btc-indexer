@@ -16,7 +16,8 @@ public class WebDataLoadTest {
     public void run() {
         WebDataLoader webDataLoader = new WebDataLoader();
         Collection<IndexSnapshot> indexSnapshotsClosePrice = webDataLoader.
-                loadCoinDeskIndexes("2014-01-01", "2014-02-01", SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
+                loadCoinDeskIndexes("2014-01-01", "2014-01-03", SnapshotMode.CLOSING_PRICE, WebLoaderAPI.HOUR);
+
         Collection<IndexSnapshot> indexSnapshotsOHLC = webDataLoader.loadCoinDeskIndexes
                 ("2014-01-01", "2014-02-01", SnapshotMode.OHLC, WebLoaderAPI.DAY);
 

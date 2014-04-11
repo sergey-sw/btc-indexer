@@ -38,7 +38,7 @@ public class Synchronizer {
         if (lastSyncTs == null) {
             String lastSync = databaseAPI.getConfig(LAST_SYNC_CONFIG_NAME);
             if (lastSync != null && !lastSync.isEmpty()) {
-                lastSyncTs = DateUtils.getTime(lastSync);
+                lastSyncTs = DateUtils.getDateTime(lastSync);
             } else {
                 lastSyncTs = new Date();
                 databaseAPI.writeConfig(LAST_SYNC_CONFIG_NAME, DateUtils.formatDateTime(lastSyncTs));

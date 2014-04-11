@@ -50,7 +50,7 @@ public class DateUtils {
         }
     }
 
-    public static Date getTime(String str) {
+    public static Date getDateTime(String str) {
         try {
             return dateTimeFormat.parse(str);
         } catch (ParseException e) {

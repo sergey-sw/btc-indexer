@@ -15,25 +15,25 @@ public class PgConnectionTest {
 
     @Test
     public void run() throws Exception {
-        DatabaseAPI dataManager = new DatabaseManager();
+        DatabaseAPI databaseAPI = new DatabaseManager();
         try {
-            dataManager.testSettings();
+            databaseAPI.testSettings();
             System.out.println("Before");
-            List<IndexSnapshot> dailyIndexes = dataManager.getDailyIndexes();
+            List<IndexSnapshot> dailyIndexes = databaseAPI.getDailyIndexes();
             for (IndexSnapshot indexSnapshot : dailyIndexes) {
                 System.out.println(indexSnapshot);
             }
 
-            dataManager.storeDailyIndexes(Arrays.asList(new IndexSnapshot(DateUtils.getDate("2018-02-03"), 24.03)));
+            databaseAPI.storeDailyIndexes(Arrays.asList(new IndexSnapshot(DateUtils.getDate("2018-02-03"), 24.03)));
             System.out.println("After insert");
-            dailyIndexes = dataManager.getDailyIndexes();
+            dailyIndexes = databaseAPI.getDailyIndexes();
             for (IndexSnapshot indexSnapshot : dailyIndexes) {
                 System.out.println(indexSnapshot);
             }
 
-            dataManager.removeDailyIndexes(Arrays.asList(DateUtils.getDate("2018-02-03")));
+            databaseAPI.removeDailyIndexes(Arrays.asList(DateUtils.getDate("2018-02-03")));
             System.out.println("After delete");
-            dailyIndexes = dataManager.getDailyIndexes();
+            dailyIndexes = databaseAPI.getDailyIndexes();
             for (IndexSnapshot indexSnapshot : dailyIndexes) {
                 System.out.println(indexSnapshot);
             }

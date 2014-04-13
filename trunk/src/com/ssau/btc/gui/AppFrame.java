@@ -31,12 +31,16 @@ import java.util.concurrent.TimeUnit;
 @ManagedComponent(name = "AppFrame")
 public class AppFrame extends AppFrameCL {
 
+    private static final long serialVersionUID = 5082357744733070890L;
+
     @Inject
     protected CurrentPriceProvider currentPriceProvider;
     @Inject
     protected ThreadManager threadManager;
     @Inject
     protected WebLoaderAPI webDataLoader;
+    @Inject
+    protected DataSupplier dataSupplier;
 
     protected NetworkAPI currentNetwork;
 
@@ -90,7 +94,7 @@ public class AppFrame extends AppFrameCL {
 
         initInfoTab();
         initNetworkTab();
-        initMistakeTab();
+        //initMistakeTab();
 
         add(jTabbedPane);
     }
@@ -152,8 +156,11 @@ public class AppFrame extends AppFrameCL {
 
         //todo background
         Collection<IndexSnapshot> indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
-        TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots);
-        JFreeChart chart = ChartHelper.createTimeChart(timeDataSet);
+        TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour");
+        JFreeChart chart = ChartHelper.createTimeChart(timeDataSet,
+                Messages.get("btc24Hour"),
+                Messages.get("btc24HourX"),
+                Messages.get("btcIndexY"));
 
         final ChartPanel chartPanel = new ChartPanel(chart);
         Dimension screenSize = getToolkit().getScreenSize();
@@ -172,10 +179,10 @@ public class AppFrame extends AppFrameCL {
         networkMainPanel = new JPanel(MARGIN_FLOW_LAYOUT);
         JScrollPane scrollPane = new JScrollPane(networkMainPanel);
 
-        JPanel networkVPanel = new JPanel();
-        BoxLayout networkPanelBoxLayout = new BoxLayout(networkVPanel, BoxLayout.Y_AXIS);
-        networkVPanel.setLayout(networkPanelBoxLayout);
-        networkMainPanel.add(networkVPanel);
+        JPanel networkLeftVPanel = new JPanel();
+        BoxLayout networkPanelBoxLayout = new BoxLayout(networkLeftVPanel, BoxLayout.Y_AXIS);
+        networkLeftVPanel.setLayout(networkPanelBoxLayout);
+        networkMainPanel.add(networkLeftVPanel);
 
         JPanel netButtonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         createNetBtn = new JButton(Messages.get("newNet"));
@@ -188,7 +195,7 @@ public class AppFrame extends AppFrameCL {
         saveNetBtn.addActionListener(new SaveNetButtonHandler());
         saveNetBtn.setEnabled(false);
         netButtonsPanel.add(saveNetBtn);
-        networkVPanel.add(netButtonsPanel);
+        networkLeftVPanel.add(netButtonsPanel);
 
         structureTablePanelOuter = new JPanel(MARGIN_FLOW_LAYOUT);
         structureTablePanelOuter.setVisible(false);
@@ -300,14 +307,14 @@ public class AppFrame extends AppFrameCL {
         teachPanel.add(tillDatePicker);
 
         JLabel teachCoeffLabel = new JLabel(Messages.get("teachCoeff"));
-        teachCoeffTF = new JTextField(Config.DEFAULT_TEACH_COEFF);
+        speedRateTF = new JTextField(Config.DEFAULT_TEACH_COEFF);
         teachPanel.add(teachCoeffLabel);
-        teachPanel.add(teachCoeffTF);
+        teachPanel.add(speedRateTF);
 
         JLabel eraCntLabel = new JLabel(Messages.get("eraCount"));
-        eraCountTF = new JTextField(Config.DEFAULT_ERA_CNT);
+        teachCycleCountTF = new JTextField(Config.DEFAULT_ERA_CNT);
         teachPanel.add(eraCntLabel);
-        teachPanel.add(eraCountTF);
+        teachPanel.add(teachCycleCountTF);
 
         teachBtn = new JButton(Messages.get("teachBtn"));
         teachBtn.addActionListener(new TeachNetButtonHandler());
@@ -347,13 +354,27 @@ public class AppFrame extends AppFrameCL {
         forecastBtn.addActionListener(new ForecastButtonHandler());
         forecastParamsPanel.add(forecastBtn);
 
-        networkVPanel.add(structureTablePanelOuter);
-        networkVPanel.add(Box.createVerticalStrut(10));
-        networkVPanel.add(teachPanelOuter);
-        networkVPanel.add(Box.createVerticalStrut(10));
-        networkVPanel.add(forecastPanelOuter);
+        networkLeftVPanel.add(structureTablePanelOuter);
+        networkLeftVPanel.add(Box.createVerticalStrut(10));
+        networkLeftVPanel.add(teachPanelOuter);
+        networkLeftVPanel.add(Box.createVerticalStrut(10));
+        networkLeftVPanel.add(forecastPanelOuter);
 
-        networkMainPanel.add(networkVPanel);
+        networkMainPanel.add(networkLeftVPanel);
+
+        JPanel chartsRightVPanel = new JPanel();
+        BoxLayout chartsVPanelLayout = new BoxLayout(chartsRightVPanel, BoxLayout.Y_AXIS);
+        chartsRightVPanel.setLayout(chartsVPanelLayout);
+
+        valuesPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        chartsRightVPanel.add(valuesPanel);
+
+        chartsRightVPanel.add(Box.createVerticalStrut(10));
+
+        mistakesPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        chartsRightVPanel.add(mistakesPanel);
+
+        networkMainPanel.add(chartsRightVPanel);
 
         jTabbedPane.addTab(Messages.get("settingTab"), scrollPane);
     }
@@ -379,7 +400,10 @@ public class AppFrame extends AppFrameCL {
 
         double[] adpeh = (double[]) network.getValue("averageDiffPerEraHistory");
         XYDataset xyDataset = ChartHelper.createXYDataSet(adpeh);
-        JFreeChart chart = ChartHelper.createDoublesChart(xyDataset);
+        JFreeChart chart = ChartHelper.createDoublesChart(xyDataset,
+                Messages.get("trainErrors"),
+                Messages.get("trainErrorsX"),
+                Messages.get("trainErrorsY"));
 
         final ChartPanel chartPanel = new ChartPanel(chart);
         Dimension screenSize = getToolkit().getScreenSize();
@@ -541,19 +565,56 @@ public class AppFrame extends AppFrameCL {
 
     protected class TeachNetButtonHandler implements ActionListener {
 
+        protected Calendar from;
+        protected Calendar till;
+        protected int teachCycleCnt;
+        protected double speedRate;
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (validate()) {
-                //todo teaching
-                Calendar calendar = (Calendar) tillDatePicker.getModel().getValue();
-                forecastDateTF.setText(DateUtils.format(calendar.getTime()));
+                Collection<IndexSnapshot> snapshots = dataSupplier.getIndexSnapshots(from.getTime(), till.getTime(), SnapshotMode.CLOSING_PRICE);
+                double[] doubles = IndexSnapshotUtils.parseClosingPrice(snapshots);
+                currentNetwork.initInputData(doubles, Interval.HOUR);
 
+                currentNetwork.setValue("teachCycleCount", teachCycleCnt);
+                currentNetwork.setValue("speedRate", speedRate);
+                currentNetwork.teach();
+
+                netStateLabel.setText(Messages.get("trainedNetState"));
+
+                double[] adpeh = (double[]) currentNetwork.getValue("averageDiffPerEraHistory");
+                XYDataset xyDataset = ChartHelper.createXYDataSet(adpeh);
+                JFreeChart mistakesChart = ChartHelper.createDoublesChart(xyDataset,
+                        Messages.get("trainErrors"),
+                        Messages.get("trainErrorsX"),
+                        Messages.get("trainErrorsY"));
+
+                final ChartPanel mistakeChartPanel = new ChartPanel(mistakesChart);
+                Dimension chartSize = new Dimension(600, 300);
+                mistakeChartPanel.setPreferredSize(chartSize);
+
+                mistakesPanel.add(mistakeChartPanel);
+
+                networkDataSet = ChartHelper.createTimeDataSet(snapshots, "btcIndex");
+                JFreeChart valuesChart = ChartHelper.createTimeChart(networkDataSet,
+                        Messages.get("btcIndex"),
+                        Messages.get("btcIndexX"),
+                        Messages.get("btcIndexY"));
+
+                ChartPanel valuesChartPanel = new ChartPanel(valuesChart);
+                valuesChartPanel.setPreferredSize(chartSize);
+
+
+                valuesPanel.add(valuesChartPanel);
+
+                forecastDateTF.setText(DateUtils.format(till.getTime()));
                 forecastPanelOuter.setVisible(true);
             }
         }
 
         protected boolean validate() {
-            Calendar from = (Calendar) fromDatePicker.getModel().getValue();
+            from = (Calendar) fromDatePicker.getModel().getValue();
             if (from == null) {
                 showMessage(
                         Messages.get("error"),
@@ -570,7 +631,7 @@ public class AppFrame extends AppFrameCL {
                 return false;
             }
 
-            Calendar till = (Calendar) tillDatePicker.getModel().getValue();
+            till = (Calendar) tillDatePicker.getModel().getValue();
             if (till == null) {
                 showMessage(
                         Messages.get("error"),
@@ -588,12 +649,12 @@ public class AppFrame extends AppFrameCL {
             }
 
             try {
-                int eraCnt = Integer.valueOf(eraCountTF.getText());
+                teachCycleCnt = Integer.valueOf(teachCycleCountTF.getText());
 
-                if (eraCnt <= 0 || eraCnt > Config.MAX_ERA_COUNT) {
+                if (teachCycleCnt <= 0 || teachCycleCnt > Config.MAX_TEACH_CYCLE_COUNT) {
                     showMessage(
                             Messages.get("error"),
-                            Messages.format("error.badEraCnt", Config.MAX_ERA_COUNT),
+                            Messages.format("error.badEraCnt", Config.MAX_TEACH_CYCLE_COUNT),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
@@ -607,9 +668,9 @@ public class AppFrame extends AppFrameCL {
             }
 
             try {
-                double teachCoeff = Double.valueOf(teachCoeffTF.getText());
+                speedRate = Double.valueOf(speedRateTF.getText());
 
-                if (teachCoeff <= 0 || teachCoeff >= 1) {
+                if (speedRate <= 0 || speedRate >= 1) {
                     showMessage(
                             Messages.get("error"),
                             Messages.get("error.badTeachCoeff"),
@@ -631,19 +692,23 @@ public class AppFrame extends AppFrameCL {
 
     protected class ForecastButtonHandler implements ActionListener {
 
+        protected int forecastSize;
+
         @Override
         public void actionPerformed(ActionEvent e) {
             if (validate()) {
-
+                double[] forecast = currentNetwork.fuzzyForecast(forecastSize);
+                List<IndexSnapshot> snapshots = IndexSnapshotUtils.convertToSnapshots(forecast, DateUtils.getDate(forecastDateTF.getText()), Interval.DAY);
+                networkDataSet.addSeries(ChartHelper.createTimeSeries(snapshots, "Forecast"));
             }
         }
 
         protected boolean validate() {
-            String forecastSize = forecastSizeTF.getText();
+            String forecastStr = forecastSizeTF.getText();
             try {
-                int value = Integer.valueOf(forecastSize);
+                forecastSize = Integer.valueOf(forecastStr);
 
-                if (value <= 0) {
+                if (forecastSize <= 0) {
                     showMessage(Messages.get("error"), Messages.get("error.badForecastSize"), JOptionPane.ERROR_MESSAGE);
                     return false;
                 }

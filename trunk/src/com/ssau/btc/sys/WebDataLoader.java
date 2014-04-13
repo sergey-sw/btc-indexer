@@ -154,20 +154,26 @@ public class WebDataLoader implements WebLoaderAPI {
     }
 
     @Override
-    public Collection<IndexSnapshot> loadDayIndexes(int days, Date startDay, SnapshotMode snapshotMode) {
+    public Collection<IndexSnapshot> loadDayIndexes(int days, Date startDate, SnapshotMode snapshotMode) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(startDay);
+        calendar.setTime(startDate);
         calendar.add(Calendar.DATE, days == 1 ? 2 : days);
-        Date afterNextDay = calendar.getTime();
+        Date endDate = calendar.getTime();
+        return loadDayIndexes(startDate, endDate, snapshotMode);
+    }
+
+    @Override
+    public Collection<IndexSnapshot> loadDayIndexes(Date startDay, Date endDay, SnapshotMode snapshotMode) {
+        Calendar calendar = Calendar.getInstance();
 
         String startDate = DateUtils.format(startDay);
-        String endDate = DateUtils.format(afterNextDay);
+        String endDate = DateUtils.format(endDay);
 
         String url = String.format(urlPattern, snapshotMode == SnapshotMode.OHLC ? "ohlc" : "close", startDate, endDate);
         List<String> lines = loadList(url);
 
-        List<IndexSnapshot> indexSnapshots = new ArrayList<>(24 * days);
-        for (int i = 1; i < 24 * days + 1; i++) {
+        List<IndexSnapshot> indexSnapshots = new ArrayList<>();
+        for (int i = 1; i < lines.size() - 3; i++) {
             String line = lines.get(i);
 
             String dateStr = line.substring(1, 20);

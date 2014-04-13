@@ -6,7 +6,10 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
-import org.jfree.data.time.*;
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.TimeSeriesDataItem;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -29,21 +32,24 @@ public class ChartHelper {
         return new XYSeriesCollection(xySeries);
     }
 
-    public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots) {
-        TimeSeries timeSeries = new TimeSeries("Index");
+    public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots, String seriesName) {
+        return new TimeSeriesCollection(createTimeSeries(indexSnapshots, seriesName));
+    }
+
+    public static TimeSeries createTimeSeries(Collection<IndexSnapshot> indexSnapshots, String seriesName) {
+        TimeSeries timeSeries = new TimeSeries(seriesName);
 
         for (IndexSnapshot indexSnapshot : indexSnapshots) {
             timeSeries.add(new TimeSeriesDataItem(new Hour(indexSnapshot.date), indexSnapshot.value));
         }
-
-        return new TimeSeriesCollection(timeSeries);
+        return timeSeries;
     }
 
-    public static JFreeChart createTimeChart(XYDataset dataset) {
+    public static JFreeChart createTimeChart(XYDataset dataset, String title, String xAxis, String yAxis) {
         final JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "BTC index",      // chart title
-                "Time",                      // x axis label
-                "Price",                      // y axis label
+                title,      // chart title
+                xAxis,                      // x axis label
+                yAxis,                      // y axis label
                 dataset,                  // data
                 false,                     // include legend
                 true,                     // tooltips
@@ -65,11 +71,11 @@ public class ChartHelper {
         return chart;
     }
 
-    public static JFreeChart createDoublesChart(XYDataset dataset) {
+    public static JFreeChart createDoublesChart(XYDataset dataset, String title, String xAxis, String yAxis) {
         final JFreeChart chart = ChartFactory.createXYLineChart(
-                "BTC index",      // chart title
-                "Time",                      // x axis label
-                "Price",                      // y axis label
+                title,      // chart title
+                xAxis,                      // x axis label
+                yAxis,                      // y axis label
                 dataset,                  // data
                 PlotOrientation.VERTICAL,
                 false,                     // include legend
@@ -90,5 +96,8 @@ public class ChartHelper {
         plot.setRenderer(xySplineRenderer);
 
         return chart;
+    }
+
+    private ChartHelper() {
     }
 }

@@ -1,7 +1,6 @@
 package com.ssau.btc.model;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Author: Sergey42
@@ -46,5 +45,28 @@ public class IndexSnapshotUtils {
         }
 
         return values;
+    }
+
+    public static List<IndexSnapshot> convertToSnapshots(double[] data, Date startDate, Interval interval) {
+        List<IndexSnapshot> indexSnapshots = new ArrayList<>(data.length);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startDate);
+
+        for (double value : data) {
+
+            switch (interval) {
+                case DAY:
+                    calendar.add(Calendar.DATE, 1);
+                    break;
+                case HOUR:
+                    calendar.add(Calendar.HOUR, 1);
+                    break;
+            }
+
+            IndexSnapshot indexSnapshot = new IndexSnapshot(calendar.getTime(), value);
+            indexSnapshots.add(indexSnapshot);
+        }
+
+        return indexSnapshots;
     }
 }

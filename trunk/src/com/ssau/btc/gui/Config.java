@@ -14,10 +14,10 @@ public class Config {
 
     public static final int MAX_LAYER_NEURON_CNT = 100;
 
-    public static final String DEFAULT_ERA_CNT = "25";
+    public static final String DEFAULT_ERA_CNT = "10";
     public static final String DEFAULT_TEACH_COEFF = "0.2";
     public static final String MIN_DATE_FROM = "2013-01-01";
-    public static final int MAX_ERA_COUNT = 100;
+    public static final int MAX_TEACH_CYCLE_COUNT = 100;
     public static final String DEFAULT_FORECAST_SIZE = "10";
 
     public static List<LayerInfo> getDefaultStructure() {

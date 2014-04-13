@@ -22,4 +22,6 @@ public interface WebLoaderAPI {
     Collection<IndexSnapshot> load24HourIndexes(SnapshotMode mode);
 
     Collection<IndexSnapshot> loadDayIndexes(int days, Date startDate, SnapshotMode snapshotMode);
+
+    Collection<IndexSnapshot> loadDayIndexes(Date startDate, Date endDate, SnapshotMode snapshotMode);
 }

@@ -5,6 +5,7 @@ import com.ssau.btc.model.LayerInfo;
 import com.ssau.btc.sys.CurrentPriceProvider;
 import com.ssau.btc.sys.Messages;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
+import org.jfree.data.time.TimeSeriesCollection;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -20,6 +21,8 @@ import java.util.ArrayList;
  * Date: 01.04.14 20:37
  */
 public class AppFrameCL extends JFrame {
+
+    private static final long serialVersionUID = 7185169783868241076L;
 
     protected static final int MARGIN = 15;
 
@@ -52,8 +55,8 @@ public class AppFrameCL extends JFrame {
     protected JPanel teachPanelOuter;
     protected JDatePickerImpl fromDatePicker;
     protected JDatePickerImpl tillDatePicker;
-    protected JTextField teachCoeffTF;
-    protected JTextField eraCountTF;
+    protected JTextField speedRateTF;
+    protected JTextField teachCycleCountTF;
     protected JButton teachBtn;
 
     protected JPanel forecastPanel;
@@ -61,6 +64,11 @@ public class AppFrameCL extends JFrame {
     protected JTextField forecastSizeTF;
     protected JButton forecastBtn;
     protected JTextField forecastDateTF;
+
+    protected JPanel mistakesPanel;
+    protected JPanel valuesPanel;
+
+    protected TimeSeriesCollection networkDataSet;
 
     protected FlowLayout SIMPLE_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
     protected FlowLayout MARGIN_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);

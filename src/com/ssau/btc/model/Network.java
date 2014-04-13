@@ -29,9 +29,6 @@ public class Network implements NetworkAPI {
     public boolean useMoments;
 
     public ActivationFunctionType[] activationFunctionTypes;
-
-    public int layerCount;
-
     /* for 8-16-1 net array is 2:16:8*/
     public double[][][] neuronWeights;
 
@@ -431,6 +428,61 @@ public class Network implements NetworkAPI {
 
         int inputLayerNeuronCount = inputsMLP.length;
 
+        double[] copyInput = new double[inputLayerNeuronCount];
+        System.arraycopy(nInputs, nInputs.length - inputLayerNeuronCount, copyInput, 0, inputLayerNeuronCount);
+
+        // Массив предсказанных значений
+        double[] forecast = new double[forecastSize + inputLayerNeuronCount];
+
+        // Первые {inputCount} точек массива прогноза равны исходным значениям
+        System.arraycopy(copyInput, 0, forecast, 0, inputLayerNeuronCount);
+
+        int outputId = neuronOutputs.length - 1;
+
+        // Начиная с позиции {Число нейронов входного слоя}
+        for (int j = inputLayerNeuronCount; j < forecastSize + inputLayerNeuronCount; j++) {
+            // Задание входных значений нейронам входного слоя
+            if (false/*j < nInputs.length*/) {
+                System.arraycopy(nInputs, j - inputLayerNeuronCount, inputsMLP, 0, inputLayerNeuronCount);
+            } else {
+                System.arraycopy(forecast, j - inputLayerNeuronCount, inputsMLP, 0, inputLayerNeuronCount);
+            }
+
+            // Вычисление выходного значения
+            fuzzyCalculateNetOutput();
+            double output = neuronOutputs[outputId][0];
+
+            if (activationFunctionTypes[outputId] == ActivationFunctionType.C_SIGMOID) {
+                output = (output - 0.5) * 2;
+            }
+
+            forecast[j] = output;
+
+            // Корректировка весов
+            if (j < nInputs.length) {
+                double diff = forecast[j] - nInputs[j];
+                fuzzyCorrectWeights(diff);
+            }
+
+            resetCache();
+        }
+
+        ActivationFunctionType type = activationFunctionTypes[activationFunctionTypes.length - 1];
+        for (int i = 0; i < forecast.length; i++) {
+            forecast[i] = denormalize(forecast[i], type);
+        }
+
+        double[] onlyForecast = new double[forecastSize];
+        System.arraycopy(forecast, inputLayerNeuronCount, onlyForecast, 0, forecastSize);
+
+        return onlyForecast;
+    }
+
+    public double[] fuzzyForecastOLD(int forecastSize) {
+        initForecastData();
+
+        int inputLayerNeuronCount = inputsMLP.length;
+
         // Массив предсказанных значений
         double[] forecast = new double[forecastSize + inputLayerNeuronCount];
 
@@ -472,7 +524,10 @@ public class Network implements NetworkAPI {
             forecast[i] = denormalize(forecast[i], type);
         }
 
-        return forecast;
+        double[] onlyForecast = new double[forecastSize];
+        System.arraycopy(forecast, inputLayerNeuronCount, onlyForecast, 0, forecastSize);
+
+        return onlyForecast;
     }
 
     private void initForecastData() {
@@ -524,6 +579,8 @@ public class Network implements NetworkAPI {
         for (int i = 0; i < nInputs.length; i++) {
             nInputs[i] = normalize(inputs[i]);
         }
+
+        studyLength = data.length;
     }
 
     @Override

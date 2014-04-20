@@ -1,7 +1,7 @@
 import com.ssau.btc.model.IndexSnapshot;
 import com.ssau.btc.sys.DatabaseAPI;
 import com.ssau.btc.sys.DatabaseManager;
-import com.ssau.btc.sys.DateUtils;
+import com.ssau.btc.utils.DateUtils;
 import org.junit.Test;
 
 import java.util.Arrays;

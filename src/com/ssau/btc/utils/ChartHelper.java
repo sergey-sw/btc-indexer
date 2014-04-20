@@ -1,4 +1,4 @@
-package com.ssau.btc.gui;
+package com.ssau.btc.utils;
 
 import com.ssau.btc.model.IndexSnapshot;
 import org.jfree.chart.ChartFactory;

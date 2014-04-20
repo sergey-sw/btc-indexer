@@ -1,6 +1,6 @@
 package com.ssau.btc.model;
 
-import com.ssau.btc.sys.DateUtils;
+import com.ssau.btc.utils.DateUtils;
 
 import java.util.Date;
 

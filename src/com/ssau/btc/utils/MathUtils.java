@@ -1,4 +1,4 @@
-package com.ssau.btc.model;
+package com.ssau.btc.utils;
 
 import java.util.Random;
 

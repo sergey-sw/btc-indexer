@@ -1,10 +1,14 @@
 package com.ssau.btc.model;
 
+import java.io.Serializable;
+
 /**
  * Author: Sergey42
  * Date: 29.03.14 18:30
  */
-public class LayerInfo {
+public class LayerInfo implements Serializable {
+
+    private static final long serialVersionUID = -1483295413300588929L;
 
     public int neuronCnt;
     public ActivationFunctionType functionType;

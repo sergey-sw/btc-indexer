@@ -1,13 +1,24 @@
 package com.ssau.btc.model;
 
-import java.io.Serializable;
+import com.ssau.btc.sys.Messages;
 
 /**
  * Author: Sergey42
  * Date: 11.04.14 18:53
  */
-public enum NetState implements Serializable {
+public enum NetState {
 
-    NEW,
-    TRAINED
+    NEW("newNetState"),
+    TRAINED("trainedNetState");
+
+    String id;
+
+    NetState(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return Messages.get(id);
+    }
 }

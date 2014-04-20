@@ -20,6 +20,8 @@ public class Config {
     public static final int MAX_TEACH_CYCLE_COUNT = 100;
     public static final String DEFAULT_FORECAST_SIZE = "10";
 
+    public static final String DIRECTORY = "D:\\";
+
     public static List<LayerInfo> getDefaultStructure() {
         List<LayerInfo> items = new ArrayList<>();
         items.add(new LayerInfo(8, null, 0));

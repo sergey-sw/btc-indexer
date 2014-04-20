@@ -5,6 +5,7 @@ import com.ssau.btc.model.LayerInfo;
 import com.ssau.btc.sys.CurrentPriceProvider;
 import com.ssau.btc.sys.Messages;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
+import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import javax.imageio.ImageIO;
@@ -43,6 +44,10 @@ public class AppFrameCL extends JFrame {
     protected JButton dayModeBtn = new JButton(Messages.get("day"));
     protected JButton monthModeBtn = new JButton(Messages.get("month"));
     protected JButton yearModeBtn = new JButton(Messages.get("year"));
+    protected JFreeChart priceInfoChart;
+
+    protected int lastInfoMode = -1;
+    protected TimeSeriesCollection infoPriceTimeSeriesCollection;
 
     protected JButton createNetBtn;
     protected JButton loadNetBtn;

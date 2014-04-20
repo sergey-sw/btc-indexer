@@ -8,7 +8,6 @@ import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 
 import javax.swing.*;
@@ -149,6 +148,7 @@ public class AppFrame extends AppFrameCL {
         buttonsPanel.add(dayModeBtn);
         buttonsPanel.add(monthModeBtn);
         buttonsPanel.add(yearModeBtn);
+        dayModeBtn.setEnabled(false);
         dayModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.DAY));
         monthModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.MONTH));
         yearModeBtn.addActionListener(new ModeChangeHandler(ModeChangeHandler.YEAR));
@@ -156,13 +156,13 @@ public class AppFrame extends AppFrameCL {
 
         //todo background
         Collection<IndexSnapshot> indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
-        TimeSeriesCollection timeDataSet = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour");
-        JFreeChart chart = ChartHelper.createTimeChart(timeDataSet,
+        infoPriceTimeSeriesCollection = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour");
+        priceInfoChart = ChartHelper.createTimeChart(infoPriceTimeSeriesCollection,
                 Messages.get("btc24Hour"),
                 Messages.get("btc24HourX"),
                 Messages.get("btcIndexY"));
 
-        final ChartPanel chartPanel = new ChartPanel(chart);
+        final ChartPanel chartPanel = new ChartPanel(priceInfoChart);
         Dimension screenSize = getToolkit().getScreenSize();
         Dimension chartSize = new Dimension(
                 Double.valueOf(screenSize.width * 0.7).intValue(),
@@ -474,7 +474,36 @@ public class AppFrame extends AppFrameCL {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            lastInfoMode = mode;
 
+            Date now = new Date();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(now);
+            Date before = null;
+
+            Collection<IndexSnapshot> indexSnapshots;
+
+            if (mode == DAY) {
+                indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
+            } else {
+                if (mode == MONTH) {
+                    calendar.add(Calendar.MONTH, -1);
+                    before = calendar.getTime();
+                } else if (mode == YEAR) {
+                    calendar.add(Calendar.YEAR, -1);
+                    before = calendar.getTime();
+                }
+                indexSnapshots = dataSupplier.getIndexSnapshots(before, now, SnapshotMode.CLOSING_PRICE);
+            }
+
+            infoPriceTimeSeriesCollection.removeAllSeries();
+            infoPriceTimeSeriesCollection.addSeries(ChartHelper.createTimeSeries(indexSnapshots, "btcInfo"));
+
+            dayModeBtn.setEnabled(mode != DAY);
+            monthModeBtn.setEnabled(mode != MONTH);
+            yearModeBtn.setEnabled(mode != YEAR);
+
+            priceInfoChart.setTitle(mode == DAY ? Messages.get("btc24Hour") : mode == MONTH ? Messages.get("btcMonth") : Messages.get("btcYear"));
         }
     }
 

@@ -34,6 +34,7 @@ public class NetworkCreator {
         System.arraycopy(params, 1, mParams, 0, layersCount);
 
         Network network = new Network();
+        network.layerInfos = layerInfos;
 
         network.neuronInputs = new double[layersCount][];
         network.zeroArray = new double[layersCount][];

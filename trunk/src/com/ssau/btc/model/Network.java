@@ -2,6 +2,8 @@ package com.ssau.btc.model;
 
 import com.ssau.btc.utils.MathUtils;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -20,15 +22,16 @@ public class Network implements NetworkAPI {
     public double[] studyInputs;
     public double[] forecastInputs;
 
-    public int teachCycleCount;
-
     public double[][] differenceHistory;
     public double[][] outputsHistory;
 
     public double[] averageDiffPerEraHistory;
 
+    public int teachCycleCount;
     public double speedRate;
     public boolean useMoments;
+    protected Date till;
+    protected Date from;
 
     public ActivationFunctionType[] activationFunctionTypes;
     /* for 8-16-1 net array is 2:16:8*/
@@ -58,9 +61,9 @@ public class Network implements NetworkAPI {
 
     private Random random = new Random();
 
-    public Interval interval;
-
     public NetState netState = NetState.NEW;
+
+    public List<LayerInfo> layerInfos;
 
     /* Maps value from interval [A;B] to interval [-1;1] */
     private double normalize(double value) {
@@ -571,7 +574,6 @@ public class Network implements NetworkAPI {
     @Override
     public void initInputData(double[] data, Interval interval) {
         inputs = data;
-        this.interval = interval;
 
         maxValue = MathUtils.findMax(inputs);
         minValue = MathUtils.findMin(inputs);
@@ -594,10 +596,11 @@ public class Network implements NetworkAPI {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Object getValue(String name) {
+    public <T> T getValue(String name) {
         try {
-            return getClass().getField(name).get(this);
+            return (T) getClass().getField(name).get(this);
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

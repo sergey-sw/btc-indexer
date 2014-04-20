@@ -141,6 +141,13 @@ public class AppFrameCL extends JFrame {
             removeRow(index);
         }
 
+        public void removeAllItems() {
+            for (int i = items.size() - 1; i > -1; i--) {
+                items.remove(i);
+                removeRow(i);
+            }
+        }
+
         @Override
         public int getColumnCount() {
             return 3;

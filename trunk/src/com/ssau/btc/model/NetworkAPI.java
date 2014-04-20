@@ -16,5 +16,5 @@ public interface NetworkAPI extends Serializable {
 
     void setValue(String name, Object value);
 
-    Object getValue(String name);
+    <T> T getValue(String name);
 }

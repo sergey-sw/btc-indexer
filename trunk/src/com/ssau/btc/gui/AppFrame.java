@@ -20,6 +20,7 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -518,8 +519,6 @@ public class AppFrame extends AppFrameCL {
             structureTablePanelOuter.setVisible(true);
             setStructurePanelEnabled(true);
             teachPanelOuter.setVisible(false);
-
-            saveNetBtn.setEnabled(true);
         }
     }
 
@@ -527,7 +526,17 @@ public class AppFrame extends AppFrameCL {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            System.out.println("Not implemented");
+            FileOutputStream fos;
+            ObjectOutputStream out;
+            try {
+                fos = new FileOutputStream("D:\\net1.dat");
+                out = new ObjectOutputStream(fos);
+                out.writeObject(currentNetwork);
+
+                out.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -535,7 +544,39 @@ public class AppFrame extends AppFrameCL {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            System.out.println("Not implemented");
+            JFileChooser fileChooser = new JFileChooser(Config.DIRECTORY);
+            int code = fileChooser.showOpenDialog(AppFrame.this);
+            if (code == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                FileInputStream fis;
+                ObjectInputStream in;
+                try {
+                    fis = new FileInputStream(selectedFile);
+                    in = new ObjectInputStream(fis);
+                    Network loaded = (Network) in.readObject();
+                    in.close();
+
+                    structureTableModel.removeAllItems();
+                    List<LayerInfo> layerInfos = loaded.layerInfos;
+                    for (LayerInfo layerInfo : layerInfos) {
+                        structureTableModel.addItem(layerInfo);
+                    }
+
+                    currentNetwork = loaded;
+
+                    structureTablePanelOuter.setVisible(true);
+                    setStructurePanelEnabled(false);
+                    teachPanelOuter.setVisible(true);
+                    netStateLabel.setText(currentNetwork.getValue("netState").toString());
+
+                    if (NetState.TRAINED == currentNetwork.getValue("netState")) {
+                        teachCycleCountTF.setText(currentNetwork.<Integer>getValue("teachCycleCount").toString());
+                        speedRateTF.setText(currentNetwork.<Double>getValue("speedRate").toString());
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 
@@ -549,7 +590,8 @@ public class AppFrame extends AppFrameCL {
                 setStructurePanelEnabled(false);
                 teachPanelOuter.setVisible(true);
 
-                netStateLabel.setText(Messages.get("newNetState"));
+                netStateLabel.setText(currentNetwork.getValue("netState").toString());
+                saveNetBtn.setEnabled(true);
             }
         }
 
@@ -615,7 +657,7 @@ public class AppFrame extends AppFrameCL {
 
                 netStateLabel.setText(Messages.get("trainedNetState"));
 
-                double[] adpeh = (double[]) currentNetwork.getValue("averageDiffPerEraHistory");
+                double[] adpeh = currentNetwork.getValue("averageDiffPerEraHistory");
                 XYDataset xyDataset = ChartHelper.createXYDataSet(adpeh);
                 JFreeChart mistakesChart = ChartHelper.createDoublesChart(xyDataset,
                         Messages.get("trainErrors"),

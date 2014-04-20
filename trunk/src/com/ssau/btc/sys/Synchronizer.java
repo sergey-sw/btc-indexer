@@ -2,6 +2,7 @@ package com.ssau.btc.sys;
 
 import com.intelli.ray.core.Inject;
 import com.intelli.ray.core.ManagedComponent;
+import com.ssau.btc.utils.DateUtils;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;

@@ -1,4 +1,7 @@
-package com.ssau.btc.model;
+package com.ssau.btc.utils;
+
+import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.Interval;
 
 import java.util.*;
 

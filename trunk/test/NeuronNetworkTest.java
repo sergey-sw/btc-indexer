@@ -1,6 +1,7 @@
 import com.ssau.btc.model.*;
 import com.ssau.btc.sys.WebDataLoader;
 import com.ssau.btc.sys.WebLoaderAPI;
+import com.ssau.btc.utils.IndexSnapshotUtils;
 import org.junit.Test;
 
 import java.util.Collection;

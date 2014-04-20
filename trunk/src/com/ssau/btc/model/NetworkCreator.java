@@ -1,6 +1,7 @@
 package com.ssau.btc.model;
 
 import com.ssau.btc.gui.Config;
+import com.ssau.btc.utils.MathUtils;
 
 import java.util.List;
 import java.util.Random;

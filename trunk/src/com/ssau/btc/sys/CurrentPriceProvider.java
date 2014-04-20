@@ -1,6 +1,7 @@
 package com.ssau.btc.sys;
 
 import com.intelli.ray.core.ManagedComponent;
+import com.ssau.btc.utils.DateUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -61,7 +62,7 @@ public class CurrentPriceProvider {
 
     public List<Price> getLastPrices(int days) {
         Date now = new Date();
-        Date before = DateUtils.calcDate(now, Calendar.DATE , -days - 2);
+        Date before = DateUtils.calcDate(now, Calendar.DATE, -days - 2);
 
         String url = String.format(LAST_PRICES_URL, DateUtils.format(before), DateUtils.format(now));
 

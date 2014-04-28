@@ -1,10 +1,12 @@
-package com.ssau.btc.model;
+package com.ssau.btc.utils;
+
+import com.ssau.btc.model.ActivationFunctionType;
 
 /**
  * Author: Sergey42
  * Date: 14.02.14 23:22
  */
-public class DemoValuesBuilder {
+public class DemoValuesHelper {
 
     public static double sigma = 1;
 

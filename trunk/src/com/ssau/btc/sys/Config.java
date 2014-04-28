@@ -1,4 +1,4 @@
-package com.ssau.btc.gui;
+package com.ssau.btc.sys;
 
 import com.ssau.btc.model.ActivationFunctionType;
 import com.ssau.btc.model.LayerInfo;

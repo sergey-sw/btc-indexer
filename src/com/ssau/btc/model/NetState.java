@@ -8,17 +8,24 @@ import com.ssau.btc.sys.Messages;
  */
 public enum NetState {
 
-    NEW("newNetState"),
-    TRAINED("trainedNetState");
+    NEW("newNetState", 0),
+    DATA_INITED("dataInitedState", 10),
+    TRAINED("trainedNetState", 20);
 
     String id;
+    int number;
 
-    NetState(String id) {
+    NetState(String id, int number) {
         this.id = id;
+        this.number = number;
     }
 
     @Override
     public String toString() {
         return Messages.get(id);
+    }
+
+    public boolean isLater(NetState state) {
+        return this.number > state.number;
     }
 }

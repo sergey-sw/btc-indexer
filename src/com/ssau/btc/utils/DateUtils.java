@@ -15,6 +15,8 @@ public class DateUtils {
     protected static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     protected static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
     protected static final DateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    protected static final DateFormat hourFormat = new SimpleDateFormat("yyyy-MM-dd HH");
+    protected static final DateFormat minuteFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     public static final int COIN_DESC_HOUR_DIFFERENCE = 4; //todo conf
     public static final String COIN_DESC_TZ = "Etc/GMT+1";
@@ -36,6 +38,14 @@ public class DateUtils {
 
     public static String formatTime(Date date) {
         return timeFormat.format(date);
+    }
+
+    public static String formatHour(Date date) {
+        return hourFormat.format(date);
+    }
+
+    public static String formatMinutes(Date date) {
+        return minuteFormat.format(date);
     }
 
     public static String formatSQL(Date date) {
@@ -64,4 +74,6 @@ public class DateUtils {
         instance.add(unit, amount);
         return instance.getTime();
     }
+
+
 }

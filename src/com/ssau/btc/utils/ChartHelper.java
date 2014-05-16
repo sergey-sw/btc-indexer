@@ -65,6 +65,9 @@ public class ChartHelper {
         plot.setDomainGridlinePaint(Color.white);
         plot.setRangeGridlinePaint(Color.white);
 
+        plot.getDomainAxis().setAutoRange(true);
+        plot.getRangeAxis().setAutoRange(true);
+
         XYSplineRenderer xySplineRenderer = new XYSplineRenderer();
         plot.setRenderer(xySplineRenderer);
 

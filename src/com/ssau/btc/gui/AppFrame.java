@@ -147,7 +147,6 @@ public class AppFrame extends AppFrameCL {
         BoxLayout chartBoxLayout = new BoxLayout(chartJPanel, BoxLayout.Y_AXIS);
         chartJPanel.setLayout(chartBoxLayout);
 
-        //todo modes
         JPanel buttonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         buttonsPanel.add(dayModeBtn);
         buttonsPanel.add(monthModeBtn);
@@ -497,7 +496,7 @@ public class AppFrame extends AppFrameCL {
                     calendar.add(Calendar.YEAR, -1);
                     before = calendar.getTime();
                 }
-                indexSnapshots = dataSupplier.getIndexSnapshots(before, now, SnapshotMode.CLOSING_PRICE);
+                indexSnapshots = dataSupplier.getIndexSnapshots(before, now, SnapshotMode.CLOSING_PRICE, Interval.DAY);
             }
 
             infoPriceTimeSeriesCollection.removeAllSeries();
@@ -507,7 +506,14 @@ public class AppFrame extends AppFrameCL {
             monthModeBtn.setEnabled(mode != MONTH);
             yearModeBtn.setEnabled(mode != YEAR);
 
-            priceInfoChart.setTitle(mode == DAY ? Messages.get("btc24Hour") : mode == MONTH ? Messages.get("btcMonth") : Messages.get("btcYear"));
+            priceInfoChart.setTitle(
+                    mode == DAY ?
+                            Messages.get("btc24Hour")
+                            : mode == MONTH
+                            ? Messages.get("btcMonth")
+                            : Messages.get("btcYear"));
+            priceInfoChart.getXYPlot().getDomainAxis().setLabel(mode == DAY ? Messages.get("btc24TimeX") : Messages.get("btc24DateX"));
+
         }
     }
 

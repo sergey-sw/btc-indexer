@@ -1,4 +1,7 @@
-import com.ssau.btc.model.*;
+import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.NetworkAPI;
+import com.ssau.btc.model.NetworkCreator;
+import com.ssau.btc.model.SnapshotMode;
 import com.ssau.btc.sys.WebDataLoader;
 import com.ssau.btc.sys.WebLoaderAPI;
 import com.ssau.btc.utils.IndexSnapshotUtils;
@@ -21,11 +24,10 @@ public class NeuronNetworkTest {
                 ("2014-01-01", "2014-03-01", SnapshotMode.CLOSING_PRICE, WebLoaderAPI.DAY);
 
         double[] data = IndexSnapshotUtils.parseClosingPrice(indexSnapshots);
-        network.initInputData(data, Interval.DAY);
+        network.initInputData(data);
 
         network.setValue("speedRate", 0.7);
         network.setValue("teachCycleCount", 50);
-        network.setValue("studyLength", data.length);
 
         network.teach();
 

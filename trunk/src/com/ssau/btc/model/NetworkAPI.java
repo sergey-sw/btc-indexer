@@ -12,7 +12,7 @@ public interface NetworkAPI extends Serializable {
 
     double[] fuzzyForecast(int forecastSize);
 
-    void initInputData(double[] data, Interval interval);
+    void initInputData(double[] data);
 
     void setValue(String name, Object value);
 

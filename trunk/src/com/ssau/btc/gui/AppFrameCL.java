@@ -7,11 +7,14 @@ import com.ssau.btc.sys.Messages;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -70,10 +73,10 @@ public class AppFrameCL extends JFrame {
     protected JButton forecastBtn;
     protected JTextField forecastDateTF;
 
-    protected JPanel mistakesPanel;
-    protected JPanel valuesPanel;
+    protected JPanel netTabMistakesPanel;
+    protected JPanel netTabIndexSnapshotsPanel;
 
-    protected TimeSeriesCollection networkDataSet;
+    protected XYDataset networkDataSet;
 
     protected FlowLayout SIMPLE_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
     protected FlowLayout MARGIN_FLOW_LAYOUT = new FlowLayout(FlowLayout.LEFT);
@@ -91,6 +94,11 @@ public class AppFrameCL extends JFrame {
 
     protected CurrentPriceProvider.Price currentPrice;
     protected volatile Double prevUSDValue;
+
+    protected JPanel mistakeTabMainPanel;
+    protected JComboBox<Integer> eraComboBox;
+    protected ItemListener eraComboBoxListener;
+    protected XYSeriesCollection diffSeries;
 
     public AppFrameCL() {
         MARGIN_FLOW_LAYOUT.setHgap(MARGIN);
@@ -118,7 +126,19 @@ public class AppFrameCL extends JFrame {
         JOptionPane.showMessageDialog(this, message, caption, messageType);
     }
 
+    protected void fillEraComboBox(int endVal) {
+        eraComboBox.removeItemListener(eraComboBoxListener);
+        eraComboBox.removeAllItems();
+
+        for (int i = 0; i < endVal + 1; i++) {
+            eraComboBox.addItem(i);
+        }
+
+        eraComboBox.addItemListener(eraComboBoxListener);
+    }
+
     protected class SettingsTableModel extends DefaultTableModel {
+        private static final long serialVersionUID = -6922716444675356382L;
 
         String[] headers;
         Class<?>[] classes;

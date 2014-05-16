@@ -23,13 +23,22 @@ import java.util.Collection;
  */
 public class ChartHelper {
 
-    public static XYDataset createXYDataSet(double[] data) {
-        XYSeries xySeries = new XYSeries("Data");
+    public static XYSeriesCollection createXYSeriesCollection(double[] data) {
+        return new XYSeriesCollection(createXYSeries(data));
+    }
 
+    public static XYSeriesCollection createXYSeriesCollection(double[] data1, double[] data2) {
+        XYSeriesCollection collection = new XYSeriesCollection(createXYSeries(data1));
+        collection.addSeries(createXYSeries(data2));
+        return collection;
+    }
+
+    public static XYSeries createXYSeries(double[] data) {
+        XYSeries xySeries = new XYSeries("Data");
         for (int i = 0; i < data.length; i++) {
             xySeries.add(i, data[i]);
         }
-        return new XYSeriesCollection(xySeries);
+        return xySeries;
     }
 
     public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots, String seriesName) {

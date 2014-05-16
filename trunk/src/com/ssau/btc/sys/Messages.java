@@ -11,6 +11,7 @@ import java.util.Properties;
  */
 public class Messages {
 
+    //TODO config
     static {
         init("ru");
     }

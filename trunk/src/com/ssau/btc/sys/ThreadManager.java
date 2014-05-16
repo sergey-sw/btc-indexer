@@ -11,8 +11,8 @@ import java.util.concurrent.*;
 @ManagedComponent(name = "ThreadManager")
 public class ThreadManager {
 
-    protected ScheduledExecutorService service = Executors.newScheduledThreadPool(4);
-    protected ExecutorService executorService = Executors.newFixedThreadPool(4);
+    protected ScheduledExecutorService service = Executors.newScheduledThreadPool(8);
+    protected ExecutorService executorService = Executors.newFixedThreadPool(8);
 
     public ScheduledFuture<?> scheduleTask(Runnable runnable, long delay, TimeUnit timeUnit) {
         return service.scheduleWithFixedDelay(runnable, 0, delay, timeUnit);

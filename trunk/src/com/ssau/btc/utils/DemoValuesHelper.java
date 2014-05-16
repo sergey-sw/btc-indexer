@@ -1,6 +1,7 @@
 package com.ssau.btc.utils;
 
 import com.ssau.btc.model.ActivationFunctionType;
+import com.ssau.btc.sys.Config;
 
 /**
  * Author: Sergey42
@@ -88,5 +89,18 @@ public class DemoValuesHelper {
             }
         }
         return result;
+    }
+
+    public static double[] getSinusValues(int size) {
+        double x0 = 0;
+        double h = Config.DEMO_FUNCTION_STEP;
+        double x = x0;
+
+        double[] values = new double[size];
+        for (int i = 0; i < size; i++) {
+            values[i] = Math.sin(x);
+            x += h;
+        }
+        return values;
     }
 }

@@ -13,7 +13,6 @@ import java.util.Random;
 public class NetworkCreator {
 
     public static Network create(List<LayerInfo> layerInfos) {
-
         int[] layers = new int[layerInfos.size()];
         ActivationFunctionType[] activationFunctionTypes = new ActivationFunctionType[layerInfos.size()];
         double[] params = new double[layerInfos.size()];
@@ -26,70 +25,56 @@ public class NetworkCreator {
 
         Random random = new Random();
 
-        int layersCount = layers.length - 1;
-        int[] mArray = new int[layersCount];
-        System.arraycopy(layers, 1, mArray, 0, layersCount);
-
-        double[] mParams = new double[layersCount];
-        System.arraycopy(params, 1, mParams, 0, layersCount);
-
         Network network = new Network();
         network.layerInfos = layerInfos;
+        MLP mlp = network.mlp = new MLP();
+        RBFLayer rbfLayer = network.rbfLayer = new RBFLayer();
+        network.init();
 
-        network.neuronInputs = new double[layersCount][];
-        network.zeroArray = new double[layersCount][];
-        network.inputsMLP = new double[layers[0]];
-        network.neuronOutputs = new double[layersCount][];
-        network.neuronDeltas = new double[layersCount][];
-        network.neuronWeights = new double[layersCount][][];
-        network.neuronWeightsM1 = new double[layersCount][][];
-        network.neuronWeightsM2 = new double[layersCount][][];
-        network.activationFunctionCoefficients = new double[mParams.length];
-        network.activationFunctionTypes = new ActivationFunctionType[activationFunctionTypes.length];
+        network.window = mlp.window = layers[0];
 
+        mlp.neuronInputs = new double[layerInfos.size()][];
+        mlp.zeroArray = new double[layerInfos.size()][];
+        //network.inputsMLP = new double[layers[0]];
+        mlp.neuronOutputs = new double[layerInfos.size()][];
+        mlp.neuronDeltas = new double[layerInfos.size()][];
+        mlp.neuronWeights = new double[layerInfos.size()][][];
+        mlp.activationFunctionCoefficients = params;
+        mlp.activationFunctionTypes = activationFunctionTypes;
 
-        System.arraycopy(mParams, 0, network.activationFunctionCoefficients, 0, mParams.length);
+        for (int i = 0; i < layerInfos.size(); i++) {
+            int neuronsCount = layers[i];
+            mlp.neuronInputs[i] = new double[neuronsCount];
+            mlp.zeroArray[i] = new double[neuronsCount];
+            mlp.neuronOutputs[i] = new double[neuronsCount];
+            mlp.neuronDeltas[i] = new double[neuronsCount];
 
-        System.arraycopy(activationFunctionTypes, 0, network.activationFunctionTypes, 0, layers.length);
+            mlp.neuronWeights[i] = new double[neuronsCount][];
 
-        for (int i = 0; i < layersCount; i++) {
-            int neuronsCount = mArray[i];
-            network.neuronInputs[i] = new double[neuronsCount];
-            network.zeroArray[i] = new double[neuronsCount];
-            network.neuronOutputs[i] = new double[neuronsCount];
-            network.neuronDeltas[i] = new double[neuronsCount];
-
-            network.neuronWeights[i] = new double[neuronsCount][];
-            network.neuronWeightsM1[i] = new double[neuronsCount][];
-            network.neuronWeightsM2[i] = new double[neuronsCount][];
-
-
-            int prevLayerCount = (i == 0) ? network.inputsMLP.length : mArray[i - 1];
+            int prevLayerCount = (i == 0) ? network.window : layers[i - 1];
 
             for (int j = 0; j < neuronsCount; j++) {
-                network.neuronWeights[i][j] = new double[prevLayerCount];
-                network.neuronWeightsM1[i][j] = new double[prevLayerCount];
-                network.neuronWeightsM2[i][j] = new double[prevLayerCount];
+                mlp.neuronWeights[i][j] = new double[prevLayerCount];
                 for (int u = 0; u < prevLayerCount; u++) {
-                    network.neuronWeights[i][j][u] = ((double) MathUtils.randInt(random, -99, 99)) / (100 * prevLayerCount);
+                    mlp.neuronWeights[i][j][u] = ((double) MathUtils.randInt(random, -99, 99)) / (100 * prevLayerCount);
                 }
             }
         }
-        // Fuzzy init
-        int fCount = network.inputsMLP.length;
-        network.fuzzyCenters = new double[fCount];
 
-        network.fuzzyInputs = new double[fCount];
-        network.fuzzyOutputs = new double[fCount];
-        network.fuzzyWeights = new double[fCount][];
-        for (int i = 0; i < fCount; i++) {
-            network.fuzzyWeights[i] = new double[fCount];
-            for (int j = 0; j < fCount; j++) {
-                network.fuzzyWeights[i][j] = MathUtils.randInt(random, -99, 99) / (100 * fCount);
+        network.outputIsSigmoid = mlp.activationFunctionTypes[layers.length - 1] == ActivationFunctionType.C_SIGMOID;
+
+        // Fuzzy init        
+        rbfLayer.fuzzyCenters = new double[network.window];
+        rbfLayer.fuzzyInputs = new double[network.window];
+        rbfLayer.fuzzyOutputs = new double[network.window];
+        rbfLayer.fuzzyWeights = new double[network.window][];
+        for (int i = 0; i < network.window; i++) {
+            rbfLayer.fuzzyWeights[i] = new double[network.window];
+            for (int j = 0; j < network.window; j++) {
+                rbfLayer.fuzzyWeights[i][j] = MathUtils.randInt(random, -99, 99) / (100 * network.window);
             }
-            network.fuzzyCenters[i] = ((double) MathUtils.randInt(random, -99, 99)) / (100 * fCount);
+            rbfLayer.fuzzyCenters[i] = ((double) MathUtils.randInt(random, -99, 99)) / (100 * network.window);
         }
-
 
         return network;
     }

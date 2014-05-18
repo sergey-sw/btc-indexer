@@ -91,10 +91,11 @@ public class DemoValuesHelper {
         return result;
     }
 
-    public static double[] getSinusValues(int size) {
+    public static double[] getSinusValues() {
         double x0 = 0;
         double h = Config.DEMO_FUNCTION_STEP;
         double x = x0;
+        int size = Config.DEMO_FUNCTION_SIZE;
 
         double[] values = new double[size];
         for (int i = 0; i < size; i++) {

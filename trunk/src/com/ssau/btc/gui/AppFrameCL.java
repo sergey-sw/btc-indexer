@@ -73,8 +73,9 @@ public class AppFrameCL extends JFrame {
     protected JButton forecastBtn;
     protected JTextField forecastDateTF;
 
-    protected JPanel netTabMistakesPanel;
-    protected JPanel netTabIndexSnapshotsPanel;
+    protected JPanel networkTabChartsRightVPanel;
+    protected JPanel networkTabMistakesPanel;
+    protected JPanel networkTabIndexSnapshotsPanel;
 
     protected XYDataset networkDataSet;
 
@@ -130,7 +131,7 @@ public class AppFrameCL extends JFrame {
         eraComboBox.removeItemListener(eraComboBoxListener);
         eraComboBox.removeAllItems();
 
-        for (int i = 0; i < endVal + 1; i++) {
+        for (int i = 0; i < endVal; i++) {
             eraComboBox.addItem(i);
         }
 

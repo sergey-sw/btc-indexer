@@ -52,7 +52,7 @@ public class AppFrame extends AppFrameCL {
 
     protected NetworkAPI currentNetwork;
 
-    public void postInit() {
+    public void init() {
         initComponents();
         threadManager.scheduleTask(new Runnable() {
             @Override
@@ -375,19 +375,18 @@ public class AppFrame extends AppFrameCL {
 
         networkMainPanel.add(networkLeftVPanel);
 
-        JPanel chartsRightVPanel = new JPanel();
-        BoxLayout chartsVPanelLayout = new BoxLayout(chartsRightVPanel, BoxLayout.Y_AXIS);
-        chartsRightVPanel.setLayout(chartsVPanelLayout);
+        networkTabChartsRightVPanel = new JPanel();
+        BoxLayout chartsVPanelLayout = new BoxLayout(networkTabChartsRightVPanel, BoxLayout.Y_AXIS);
+        networkTabChartsRightVPanel.setLayout(chartsVPanelLayout);
 
-        netTabIndexSnapshotsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        chartsRightVPanel.add(netTabIndexSnapshotsPanel);
+        networkTabIndexSnapshotsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        networkTabChartsRightVPanel.add(networkTabIndexSnapshotsPanel);
+        networkTabChartsRightVPanel.add(Box.createVerticalStrut(10));
 
-        chartsRightVPanel.add(Box.createVerticalStrut(10));
+        networkTabMistakesPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        networkTabChartsRightVPanel.add(networkTabMistakesPanel);
 
-        netTabMistakesPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        chartsRightVPanel.add(netTabMistakesPanel);
-
-        networkMainPanel.add(chartsRightVPanel);
+        networkMainPanel.add(networkTabChartsRightVPanel);
 
         jTabbedPane.addTab(Messages.get("settingTab"), scrollPane);
     }
@@ -398,7 +397,7 @@ public class AppFrame extends AppFrameCL {
         }
 
         mistakeTabMainPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        jTabbedPane.addTab(Messages.get("Mistakes"), mistakeTabMainPanel);
+        jTabbedPane.addTab(Messages.get("mistakesTab"), mistakeTabMainPanel);
 
         JPanel mistakeTabVPanel = new JPanel();
         BoxLayout mistakeTabVPanelLayout = new BoxLayout(mistakeTabVPanel, BoxLayout.Y_AXIS);
@@ -416,7 +415,7 @@ public class AppFrame extends AppFrameCL {
 
         double[][] outputsHistory = currentNetwork.getValue("outputsHistory");
         double[] zeroEraOutputs = outputsHistory[0];
-        double[] nInputs = currentNetwork.getValue("nInputs");
+        double[] nInputs = currentNetwork.getValue("nData");
 
         diffSeries = ChartHelper.createXYSeriesCollection(zeroEraOutputs, nInputs);
         JFreeChart chart = ChartHelper.createDoublesChart(diffSeries,
@@ -544,6 +543,10 @@ public class AppFrame extends AppFrameCL {
             structureTablePanelOuter.setVisible(true);
             setStructurePanelEnabled(true);
             teachPanelOuter.setVisible(false);
+            forecastPanelOuter.setVisible(false);
+            networkTabChartsRightVPanel.setVisible(false);
+            networkTabMistakesPanel.removeAll();
+            networkTabIndexSnapshotsPanel.removeAll();
         }
     }
 
@@ -678,17 +681,21 @@ public class AppFrame extends AppFrameCL {
                 return;
             }
 
+            networkTabChartsRightVPanel.setVisible(true);
             if (!Config.USE_DEMO_FUNCTION) {
                 snapshots = dataSupplier.getIndexSnapshots(from.getTime(), till.getTime(), SnapshotMode.CLOSING_PRICE);
                 doubles = IndexSnapshotUtils.parseClosingPrice(snapshots);
                 currentNetwork.initInputData(doubles);
+                currentNetwork.setValue("teachCycleCount", teachCycleCnt);
+                currentNetwork.setValue("speedRate", speedRate);
             } else {
-                doubles = DemoValuesHelper.getSinusValues(1500);
+                doubles = DemoValuesHelper.getSinusValues();
                 currentNetwork.initInputData(doubles);
+                teachCycleCnt = 10;
+                currentNetwork.setValue("teachCycleCount", teachCycleCnt);
+                currentNetwork.setValue("speedRate", 0.1);
             }
 
-            currentNetwork.setValue("teachCycleCount", teachCycleCnt);
-            currentNetwork.setValue("speedRate", speedRate);
             currentNetwork.teach();
 
             netStateLabel.setText(Messages.get("trainedNetState"));
@@ -704,22 +711,24 @@ public class AppFrame extends AppFrameCL {
             Dimension chartSize = new Dimension(600, 300);
             mistakeChartPanel.setPreferredSize(chartSize);
 
-            netTabMistakesPanel.add(mistakeChartPanel);
+            networkTabMistakesPanel.add(mistakeChartPanel);
 
+            JFreeChart valuesChart;
             if (!Config.USE_DEMO_FUNCTION) {
                 networkDataSet = ChartHelper.createTimeDataSet(snapshots, "btcIndex");
+                valuesChart = ChartHelper.createTimeChart(networkDataSet,
+                        Messages.get("btcIndex"),
+                        Messages.get("btcIndexX"),
+                        Messages.get("btcIndexY"));
             } else {
-                networkDataSet = ChartHelper.createXYSeriesCollection(doubles);
+                networkDataSet = ChartHelper.createXYSeriesCollection(doubles, 0, Config.DEMO_FUNCTION_STEP);
+                valuesChart = ChartHelper.createDoublesChart(networkDataSet, "Demo function", "X", "Y");
             }
-            JFreeChart valuesChart = ChartHelper.createTimeChart(networkDataSet,
-                    Messages.get("btcIndex"),
-                    Messages.get("btcIndexX"),
-                    Messages.get("btcIndexY"));
 
             ChartPanel valuesChartPanel = new ChartPanel(valuesChart);
             valuesChartPanel.setPreferredSize(chartSize);
 
-            netTabIndexSnapshotsPanel.add(valuesChartPanel);
+            networkTabIndexSnapshotsPanel.add(valuesChartPanel);
 
             if (!Config.USE_DEMO_FUNCTION) {
                 forecastDateTF.setText(DateUtils.format(till.getTime()));
@@ -821,7 +830,8 @@ public class AppFrame extends AppFrameCL {
                             forecast, DateUtils.getDate(forecastDateTF.getText()), Interval.DAY);
                     ((TimeSeriesCollection) networkDataSet).addSeries(ChartHelper.createTimeSeries(snapshots, "Forecast"));
                 } else {
-                    ((XYSeriesCollection) networkDataSet).addSeries(ChartHelper.createXYSeries(forecast));
+                    double xLast = Config.DEMO_FUNCTION_STEP * Config.DEMO_FUNCTION_SIZE;
+                    ((XYSeriesCollection) networkDataSet).addSeries(ChartHelper.createXYSeries(forecast, xLast, Config.DEMO_FUNCTION_STEP));
                 }
             }
         }
@@ -853,7 +863,7 @@ public class AppFrame extends AppFrameCL {
 
             double[][] outputsHistory = currentNetwork.getValue("outputsHistory");
             double[] zeroEraOutputs = outputsHistory[era];
-            double[] nInputs = currentNetwork.getValue("nInputs");
+            double[] nInputs = currentNetwork.getValue("nData");
 
             diffSeries.removeAllSeries();
             diffSeries.addSeries(ChartHelper.createXYSeries(zeroEraOutputs));

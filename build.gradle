@@ -30,6 +30,15 @@ configure(rootProject) {
         }
     }
 
+    task sourceJar(type: Jar) {
+        from file('src')
+        classifier = 'sources'
+    }
+
+    artifacts {
+        archives sourceJar
+    }
+
     dependencies {
         compile 'postgresql:postgresql:9.0-801.jdbc4'
         compile 'org.apache.commons:commons-io:1.3.2'

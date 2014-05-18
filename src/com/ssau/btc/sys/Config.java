@@ -22,7 +22,8 @@ public class Config {
 
     public static final String DIRECTORY = "D:\\";
 
-    public static boolean USE_DEMO_FUNCTION = false;
+    public static boolean USE_DEMO_FUNCTION = true;
+    public static int DEMO_FUNCTION_SIZE = 314 * 3;
     public static double DEMO_FUNCTION_STEP = 0.01;
 
     public static int CMEANS_MAX_ITERATIONS = 20;

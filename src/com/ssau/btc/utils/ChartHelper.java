@@ -27,6 +27,10 @@ public class ChartHelper {
         return new XYSeriesCollection(createXYSeries(data));
     }
 
+    public static XYSeriesCollection createXYSeriesCollection(double[] data, double x0, double step) {
+        return new XYSeriesCollection(createXYSeries(data, x0, step));
+    }
+
     public static XYSeriesCollection createXYSeriesCollection(double[] data1, double[] data2) {
         XYSeriesCollection collection = new XYSeriesCollection(createXYSeries(data1));
         collection.addSeries(createXYSeries(data2));
@@ -37,6 +41,14 @@ public class ChartHelper {
         XYSeries xySeries = new XYSeries("Data");
         for (int i = 0; i < data.length; i++) {
             xySeries.add(i, data[i]);
+        }
+        return xySeries;
+    }
+
+    public static XYSeries createXYSeries(double[] data, double x0, double step) {
+        XYSeries xySeries = new XYSeries("Data");
+        for (int i = 0; i < data.length; i++) {
+            xySeries.add(x0 + i * step, data[i]);
         }
         return xySeries;
     }

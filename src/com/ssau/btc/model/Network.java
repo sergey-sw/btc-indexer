@@ -1,10 +1,8 @@
 package com.ssau.btc.model;
 
-import com.ssau.btc.sys.Config;
 import com.ssau.btc.utils.MathUtils;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * Author: Sergey42
@@ -15,36 +13,27 @@ public class Network implements NetworkAPI {
     private static final long serialVersionUID = 5201280714110288780L;
 
     /* Array of input values */
-    public double[] inputs;
-    public double[] nInputs;
-
-    public int inputsLength;
-
-    public double[] studyInputs;
+    public double[] data;
+    public double[] nData;
+    public int dataLength;
+    public int window;
 
     public double[][] differenceHistory;
     public double[][] outputsHistory;
-
     public double[] averageDiffPerEraHistory;
-    public transient double[] fuzzyTeachErrorHistory;
 
     public int teachCycleCount;
     public double speedRate;
-    public boolean useMoments;
 
     public ActivationFunctionType[] activationFunctionTypes;
     /* for 8-16-1 net array is 2:16:8*/
     public double[][][] neuronWeights;
 
-    public double[][][] neuronWeightsM1;
-    public double[][][] neuronWeightsM2;
-
-    public double[] inputsMLP;
-    public double[][] neuronInputs;
-
+    //public double[] inputsMLP;
+    //public double[][] neuronInputs;
+    /*public double[][] neuronOutputs;
     public double[][] zeroArray;
 
-    public double[][] neuronOutputs;
     public double[] activationFunctionCoefficients;
 
     public double[][] neuronDeltas;
@@ -53,17 +42,59 @@ public class Network implements NetworkAPI {
     public double[] fuzzyOutputs;
     public double[][] fuzzyWeights;
     public double[] fuzzyCenters;
-    /* Dimension M - input data count, N - input layer count */
-    public double[][] fuzzyBelongs;
+    *//* Dimension M - input data count, N - input layer count *//*
+    public double[][] fuzzyBelongs;*/
 
     public double maxValue;
     public double minValue;
 
-    private Random random = new Random();
+    //private Random random = new Random();
 
     public NetState netState = NetState.NEW;
 
     public List<LayerInfo> layerInfos;
+
+    protected MLP mlp;
+    protected RBFLayer rbfLayer;
+
+    protected boolean outputIsSigmoid;
+
+    private NetworkMediator networkMediator = new NetworkMediator() {
+
+        @Override
+        public double calcNetOutput(double[] inputs) {
+            double[] outputs = rbfLayer.calcRBFOutput(inputs);
+            return mlp.calcNetworkOutput(outputs);
+        }
+
+        @Override
+        public void correctWeights(double difference) {
+            fuzzyCorrectWeights(difference);
+        }
+
+        @Override
+        public void onDataInit() {
+            mlp.nData = nData;
+            mlp.dataLength = nData.length;
+            rbfLayer.nData = nData;
+            rbfLayer.dataLength = nData.length;
+        }
+
+        @Override
+        public ActivationFunctionType getOutputActivationFunction() {
+            return mlp.activationFunctionTypes[mlp.activationFunctionTypes.length - 1];
+        }
+
+        @Override
+        public void initDifferenceHistory(int teachCycleCnt) {
+            mlp.initDifferenceHistory(teachCycleCnt);
+        }
+    };
+
+    public void init() {
+        mlp.init(networkMediator);
+        rbfLayer.init(networkMediator);
+    }
 
     /* Maps value from interval [A;B] to interval [-1;1] */
     private double normalize(double value) {
@@ -77,7 +108,7 @@ public class Network implements NetworkAPI {
         return value * (maxValue - minValue) / 2 + 0.5 * (maxValue + minValue);
     }
 
-    private double calcNeuronOutput(double input, int layerNo) {
+    /*private double calcNeuronOutput(double input, int layerNo) {
         if (layerNo == 0) {
             layerNo = 1;
         }
@@ -96,40 +127,11 @@ public class Network implements NetworkAPI {
             default:
                 throw new RuntimeException("Default case operator is a rudiment");
         }
-    }
+    }*/
 
-    private void calcNetOutput() {
-        // Если рассматриваем входной слой -> копируем вход на выход
-        System.arraycopy(neuronInputs[0], 0, neuronOutputs[0], 0, neuronInputs[0].length);
-
-        int inputLayerLength = neuronInputs[0].length;
-        int secondLayerLength = neuronInputs[1].length;
-
-        // Рассчет входа скрытого слоя
-        for (int u = 0; u < secondLayerLength; u++) {
-            for (int j = 0; j < inputLayerLength; j++) {
-                neuronInputs[1][u] = neuronOutputs[0][j] * neuronWeights[1][u][j];
-            }
-        }
-
-        // Проход по всем слоям нейронной сети c 1
-        for (int i = 1; i < neuronInputs.length; i++) {
-            // Проход по всем нейронам текущего слоя
-            for (int j = 0; j < neuronInputs[i].length; j++) {
-                neuronOutputs[i][j] = calcNeuronOutput(neuronInputs[i][j], i);
-
-                // Проход по нейронам, явл-ся приемниками сигнала от neuron
-                if (i >= neuronInputs.length - 1) continue;
-
-                for (int u = 0; i < neuronInputs[i + 1].length; u++) {
-                    neuronInputs[i + 1][u] += neuronOutputs[i][j] * neuronWeights[i + 1][u][j];
-                }
-            }
-        }
-    }
-
-    private void fuzzyCalculateNetOutput() {
-        int inputCount = inputsMLP.length;
+    private double fuzzyCalculateNetOutput(double[] inputs) {
+        return networkMediator.calcNetOutput(inputs);
+        /*int inputCount = inputsMLP.length;
         int fuzzyCount = fuzzyInputs.length;
 
         // кэшируем расстояния
@@ -179,11 +181,11 @@ public class Network implements NetworkAPI {
                     neuronInputs[i + 1][u] += neuronOutputs[i][j] * neuronWeights[i + 1][u][j];
                 }
             }
-        }
+        }*/
     }
 
-    private void fuzzyInitBelongs() {
-        fuzzyBelongs = new double[inputsLength][];
+   /* private void fuzzyInitBelongs() {
+        fuzzyBelongs = new double[dataLength][];
         for (int i = 0; i < fuzzyBelongs.length; i++) {
             fuzzyBelongs[i] = new double[inputsMLP.length];
         }
@@ -202,19 +204,19 @@ public class Network implements NetworkAPI {
                 successInit = true;
             }
         }
-    }
+    }*/
 
-    private static double calcBelongToCenter(double[] inputs, double center) {
+    /*private static double calcBelongToCenter(double[] inputs, double center) {
         double sum = 0.0;
         for (double input : inputs) {
             sum += (center - input) * (center - input);
         }
         return sum;
-    }
+    }*/
 
     // C-means
     /* Seems that is teaches RBF layer only */
-    private void fuzzyTeaching() {
+    /*private void fuzzyTeaching() {
         // init belong coefficients
         fuzzyInitBelongs();
 
@@ -234,9 +236,9 @@ public class Network implements NetworkAPI {
 
                 // Цикл по входной выборке
                 double belongSquare;
-                for (int i = 0; i < inputsLength; i++) {
+                for (int i = 0; i < dataLength; i++) {
                     belongSquare = fuzzyBelongs[i][j] * fuzzyBelongs[i][j];
-                    tempUpSum += belongSquare * nInputs[i];
+                    tempUpSum += belongSquare * nData[i];
                     tempDownSum += belongSquare;
                 }
 
@@ -249,9 +251,9 @@ public class Network implements NetworkAPI {
 
             double distance;
             for (int f = 0; f < inputsMLP.length; f++) {
-                for (int i = 0; i < inputsLength; i++) {
+                for (int i = 0; i < dataLength; i++) {
                     temp1 = fuzzyBelongs[i][f];
-                    distance = fuzzyCenters[f] - nInputs[i];
+                    distance = fuzzyCenters[f] - nData[i];
                     temp2 = distance * distance;
                     error += temp1 * temp1 * temp2 * temp2;
                 }
@@ -267,15 +269,15 @@ public class Network implements NetworkAPI {
 
             // Пересчет коэф-ов принадлежности
             for (int f = 0; f < inputsMLP.length; f++) {
-                for (int i = 0; i < inputsLength; i++) {
+                for (int i = 0; i < dataLength; i++) {
                     // еще одна сумма
                     double sum = 0.0;
-                    distance = fuzzyCenters[f] - nInputs[i];
+                    distance = fuzzyCenters[f] - nData[i];
                     double tmp1 = distance * distance * distance * distance;
                     double tmp2;
 
                     for (int k = 0; k < inputsMLP.length; k++) {
-                        distance = fuzzyCenters[k] - nInputs[i];
+                        distance = fuzzyCenters[k] - nData[i];
                         tmp2 = distance * distance * distance * distance;
                         sum += tmp1 / tmp2;
                     }
@@ -285,21 +287,21 @@ public class Network implements NetworkAPI {
             }
             iterationNumber++;
         }
-    }
+    }*/
 
     @Override
     public void teach() {
         if (netState != NetState.DATA_INITED) {
-            throw new IllegalStateException("Expected data inited state. Current state : " + netState);
+            throw new IllegalStateException("Data must be initialized before teaching. Current state : " + netState);
         }
-
-        initDifferenceHistory();
-        fuzzyTeaching();
+        networkMediator.initDifferenceHistory(teachCycleCount);
+        rbfLayer.teach();//fuzzyTeaching();
         for (int i = 0; i < teachCycleCount; i++) {
-            fuzzyTeachingMain(i);
+            mlp.teach(i);//fuzzyTeachingMain(i);
         }
     }
 
+    /*
     private double calcActivationFunctionDerivative(double output, double input, int layerId) {
         ActivationFunctionType actFunctionType = activationFunctionTypes[layerId];
 
@@ -319,9 +321,10 @@ public class Network implements NetworkAPI {
                 throw new RuntimeException("Default case operator is a rudiment");
         }
     }
-
+    */
     private void fuzzyCorrectWeights(double difference) {
-        int last = neuronDeltas.length - 1;
+        mlp.correctWeights(difference);
+        /*int last = neuronDeltas.length - 1;
         neuronDeltas[last][0] = difference *
                 calcActivationFunctionDerivative(neuronOutputs[last][0], neuronInputs[last][0], last + 1); //todo i made lst + 1
 
@@ -362,23 +365,25 @@ public class Network implements NetworkAPI {
                     neuronWeights[i][j][u] -= deltaW;
                 }
             }
-        }
+        }*/
     }
 
+    /*
     private void fuzzyTeachingMain(int eraNumber) {
         int iterationNumber = 0; // Номер итерации алгоритма внутри одной эпохи
         int inputLayerNeuronCount = inputsMLP.length; // кол-во нейронов входного слоя
         int outputLayerNumber = neuronOutputs.length - 1;
 
         // Копируем первые значения в массив истории выходов
-        System.arraycopy(nInputs, 0, outputsHistory[eraNumber], 0, inputLayerNeuronCount);
+        System.arraycopy(nData, 0, outputsHistory[eraNumber], 0, inputLayerNeuronCount);
 
-        while (iterationNumber < inputsLength - inputLayerNeuronCount - 1) {
+        while (iterationNumber < dataLength - inputLayerNeuronCount - 1) {
             // Копируем участок выборки на вход сети
-            System.arraycopy(nInputs, iterationNumber, inputsMLP, 0, inputLayerNeuronCount);
+            double[] inputs = new double[inputLayerNeuronCount];
+            System.arraycopy(nData, iterationNumber, inputs*//*inputsMLP*//*, 0, inputLayerNeuronCount);
 
             // Вычисление выходного сигнала при текущих весах и входных данных
-            fuzzyCalculateNetOutput();
+            fuzzyCalculateNetOutput(inputs);
 
             double output = neuronOutputs[outputLayerNumber][0];
 
@@ -388,7 +393,7 @@ public class Network implements NetworkAPI {
             }
 
             // Вычисление величины несоответствия
-            double difference = output - nInputs[iterationNumber + inputLayerNeuronCount];
+            double difference = output - nData[iterationNumber + inputLayerNeuronCount];
 
             differenceHistory[eraNumber][iterationNumber + inputLayerNeuronCount] = difference;
             outputsHistory[eraNumber][iterationNumber + inputLayerNeuronCount] = output;
@@ -408,93 +413,89 @@ public class Network implements NetworkAPI {
         }
         averageDiffPerEraHistory[eraNumber] = Math.sqrt(sum / differenceHistory[eraNumber].length);
     }
+    */
 
     private void resetCache() {
-        for (int i = 0; i < zeroArray.length; i++) {
+        /*for (int i = 0; i < zeroArray.length; i++) {
             System.arraycopy(zeroArray[i], 0, neuronInputs[i], 0, zeroArray[i].length);
-        }
+        }*/
+        mlp.resetCache();
     }
 
     @Override
     public double[] fuzzyForecast(int forecastSize) {
-        //initForecastData();
-
-        int inputLayerNeuronCount = inputsMLP.length;
-        double[] copyInput = new double[inputLayerNeuronCount];
-        System.arraycopy(nInputs, nInputs.length - inputLayerNeuronCount, copyInput, 0, inputLayerNeuronCount);
+        double[] copyInput = new double[window];
+        System.arraycopy(nData, nData.length - window, copyInput, 0, window);
 
         // Массив предсказанных значений
-        double[] forecast = new double[forecastSize + inputLayerNeuronCount];
+        double[] forecast = new double[forecastSize + window];
 
         // Первые {inputCount} точек массива прогноза равны исходным значениям
-        System.arraycopy(copyInput, 0, forecast, 0, inputLayerNeuronCount);
+        System.arraycopy(copyInput, 0, forecast, 0, window);
 
-        int outputId = neuronOutputs.length - 1;
+        //int outputId = neuronOutputs.length - 1;
 
+        double[] inputs = new double[window];
         // Начиная с позиции {Число нейронов входного слоя}
-        for (int j = inputLayerNeuronCount; j < forecastSize + inputLayerNeuronCount; j++) {
+        for (int j = window; j < forecastSize + window; j++) {
             // Задание входных значений нейронам входного слоя
-            if (false/*j < nInputs.length*/) {
-                System.arraycopy(nInputs, j - inputLayerNeuronCount, inputsMLP, 0, inputLayerNeuronCount);
-            } else {
-                System.arraycopy(forecast, j - inputLayerNeuronCount, inputsMLP, 0, inputLayerNeuronCount);
-            }
+            System.arraycopy(forecast, j - window, inputs/*inputsMLP*/, 0, window);
 
             // Вычисление выходного значения
-            fuzzyCalculateNetOutput();
-            double output = neuronOutputs[outputId][0];
+            double output = networkMediator.calcNetOutput(inputs);
 
-            if (activationFunctionTypes[outputId] == ActivationFunctionType.C_SIGMOID) {
+            if (outputIsSigmoid/*activationFunctionTypes[outputId] == ActivationFunctionType.C_SIGMOID*/) {
                 output = (output - 0.5) * 2;
             }
 
             forecast[j] = output;
 
             // Корректировка весов
-            if (j < nInputs.length) {
-                double diff = forecast[j] - nInputs[j];
+            if (j < nData.length) {
+                double diff = forecast[j] - nData[j];
                 fuzzyCorrectWeights(diff);
             }
 
             resetCache();
         }
 
-        ActivationFunctionType type = activationFunctionTypes[activationFunctionTypes.length - 1];
+        ActivationFunctionType type = networkMediator.getOutputActivationFunction();/*activationFunctionTypes[activationFunctionTypes.length - 1];*/
         for (int i = 0; i < forecast.length; i++) {
             forecast[i] = denormalize(forecast[i], type);
         }
 
         double[] onlyForecast = new double[forecastSize];
-        System.arraycopy(forecast, inputLayerNeuronCount, onlyForecast, 0, forecastSize);
+        System.arraycopy(forecast, window, onlyForecast, 0, forecastSize);
 
         return onlyForecast;
     }
 
-    private void initDifferenceHistory() {
+    /*private void initDifferenceHistory() {
         differenceHistory = new double[teachCycleCount][];
         outputsHistory = new double[teachCycleCount][];
 
         for (int i = 0; i < differenceHistory.length; i++) {
-            differenceHistory[i] = new double[inputsLength];
-            outputsHistory[i] = new double[inputsLength];
+            differenceHistory[i] = new double[dataLength];
+            outputsHistory[i] = new double[dataLength];
         }
         averageDiffPerEraHistory = new double[teachCycleCount];
-    }
+    }*/
 
     @Override
     public void initInputData(double[] data) {
-        inputsLength = data.length;
-        inputs = data;
+        dataLength = data.length;
+        this.data = data;
 
-        maxValue = MathUtils.findMax(inputs);
-        minValue = MathUtils.findMin(inputs);
+        maxValue = MathUtils.findMax(this.data);
+        minValue = MathUtils.findMin(this.data);
 
         /* init normalized data */
-        nInputs = new double[inputs.length];
-        for (int i = 0; i < nInputs.length; i++) {
-            nInputs[i] = normalize(inputs[i]);
+        nData = new double[this.data.length];
+        for (int i = 0; i < nData.length; i++) {
+            nData[i] = normalize(this.data[i]);
         }
         netState = NetState.DATA_INITED;
+        networkMediator.onDataInit();
     }
 
     @Override

@@ -117,7 +117,7 @@ public class MLP {
 
         // Проход по слоям - с предпоследнего до первого
         // Вычисление величины дельта
-        for (int i = last - 1; i >= 0; i--) {
+        for (int i = last - 1; i >= 1; i--) {
             // Проход по нейронам слоя
             for (int j = 0; j < neuronInputs[i].length; j++) {
                 double rightSum = 0.0;
@@ -126,13 +126,6 @@ public class MLP {
                 }
                 neuronDeltas[i][j] = rightSum *
                         calcActivationFunctionDerivative(neuronOutputs[i][j], neuronInputs[i][j], i);
-            }
-        }
-        //Корректировка для первого слоя
-        for (int k = 0; k < window; k++) {
-            for (int t = 0; t < window; t++) {
-                double deltaW = neuronDeltas[0][k] * neuronInputs[0][t] * speedRate;
-                neuronWeights[0][k][t] -= deltaW;
             }
         }
 

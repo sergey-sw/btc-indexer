@@ -10,11 +10,17 @@ public interface NetworkAPI extends Serializable {
 
     void teach();
 
-    double[] fuzzyForecast(int forecastSize);
+    double[] forecast(int forecastSize);
 
     void initInputData(double[] data);
 
     void setValue(String name, Object value);
 
     <T> T getValue(String name);
+
+    double[] getAverageDiffPerEraHistory();
+
+    double[][] getOutputHistory();
+
+    void setSpeedRate(double speedRate);
 }

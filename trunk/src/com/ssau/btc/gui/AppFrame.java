@@ -413,7 +413,7 @@ public class AppFrame extends AppFrameCL {
         eraPanel.add(eraComboBox);
         mistakeTabVPanel.add(eraPanel);
 
-        double[][] outputsHistory = currentNetwork.getValue("outputsHistory");
+        double[][] outputsHistory = currentNetwork.getOutputHistory();
         double[] zeroEraOutputs = outputsHistory[0];
         double[] nInputs = currentNetwork.getValue("nData");
 
@@ -687,20 +687,20 @@ public class AppFrame extends AppFrameCL {
                 doubles = IndexSnapshotUtils.parseClosingPrice(snapshots);
                 currentNetwork.initInputData(doubles);
                 currentNetwork.setValue("teachCycleCount", teachCycleCnt);
-                currentNetwork.setValue("speedRate", speedRate);
+                currentNetwork.setSpeedRate(speedRate);
             } else {
                 doubles = DemoValuesHelper.getSinusValues();
                 currentNetwork.initInputData(doubles);
                 teachCycleCnt = 10;
                 currentNetwork.setValue("teachCycleCount", teachCycleCnt);
-                currentNetwork.setValue("speedRate", 0.1);
+                currentNetwork.setSpeedRate(0.1);
             }
 
             currentNetwork.teach();
 
             netStateLabel.setText(Messages.get("trainedNetState"));
 
-            double[] adpeh = currentNetwork.getValue("averageDiffPerEraHistory");
+            double[] adpeh = currentNetwork.getAverageDiffPerEraHistory();
             XYDataset xyDataset = ChartHelper.createXYSeriesCollection(adpeh);
             JFreeChart mistakesChart = ChartHelper.createDoublesChart(xyDataset,
                     Messages.get("trainErrors"),
@@ -823,7 +823,7 @@ public class AppFrame extends AppFrameCL {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (validate()) {
-                double[] forecast = currentNetwork.fuzzyForecast(forecastSize);
+                double[] forecast = currentNetwork.forecast(forecastSize);
 
                 if (!Config.USE_DEMO_FUNCTION) {
                     List<IndexSnapshot> snapshots = IndexSnapshotUtils.convertToSnapshots(
@@ -861,7 +861,7 @@ public class AppFrame extends AppFrameCL {
         public void itemStateChanged(ItemEvent e) {
             Integer era = (Integer) e.getItem();
 
-            double[][] outputsHistory = currentNetwork.getValue("outputsHistory");
+            double[][] outputsHistory = currentNetwork.getOutputHistory();
             double[] zeroEraOutputs = outputsHistory[era];
             double[] nInputs = currentNetwork.getValue("nData");
 

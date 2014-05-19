@@ -31,7 +31,7 @@ public class NeuronNetworkTest {
 
         network.teach();
 
-        double[] forecasts = network.fuzzyForecast(30);
+        double[] forecasts = network.forecast(30);
         for (double forecast : forecasts) {
             System.out.println("forecast: " + forecast);
         }

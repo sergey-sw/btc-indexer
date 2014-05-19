@@ -14,7 +14,6 @@ public class RBFLayer {
     public int dataLength;
     public double[] fuzzyInputs;
     public double[] fuzzyOutputs;
-    public double[][] fuzzyWeights;
     public double[] fuzzyCenters;
     /* Dimension M - input data count, N - input layer count */
     public double[][] fuzzyBelongs;
@@ -57,14 +56,13 @@ public class RBFLayer {
 
         while (!errorIsOk && iterationNumber < iterationsMaxNumber) {
             // Расчет центров
-            // Цикл по нейронам fuzzy слоя
             for (int j = 0; j < size; j++) {
                 double tempUpSum = 0.0;
                 double tempDownSum = 0.0;
 
                 // Цикл по входной выборке
                 double belongSquare;
-                for (int i = 0; i < size; i++) {
+                for (int i = 0; i < dataLength; i++) {
                     belongSquare = fuzzyBelongs[i][j] * fuzzyBelongs[i][j];
                     tempUpSum += belongSquare * nData[i];
                     tempDownSum += belongSquare;

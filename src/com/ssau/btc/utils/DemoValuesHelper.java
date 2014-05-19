@@ -100,7 +100,7 @@ public class DemoValuesHelper {
         double[] values = new double[size];
         for (int i = 0; i < size; i++) {
             values[i] = Math.sin(x);
-            x += h;
+            x = x0 + i * h;
         }
         return values;
     }

@@ -31,7 +31,7 @@ public class NetworkCreator {
         RBFLayer rbfLayer = network.rbfLayer = new RBFLayer();
         network.init();
 
-        network.window = mlp.window = layers[0];
+        network.window = mlp.window = rbfLayer.size = layers[0];
 
         mlp.neuronInputs = new double[layerInfos.size()][];
         mlp.zeroArray = new double[layerInfos.size()][];
@@ -48,7 +48,6 @@ public class NetworkCreator {
             mlp.zeroArray[i] = new double[neuronsCount];
             mlp.neuronOutputs[i] = new double[neuronsCount];
             mlp.neuronDeltas[i] = new double[neuronsCount];
-
             mlp.neuronWeights[i] = new double[neuronsCount][];
 
             int prevLayerCount = (i == 0) ? network.window : layers[i - 1];
@@ -67,13 +66,8 @@ public class NetworkCreator {
         rbfLayer.fuzzyCenters = new double[network.window];
         rbfLayer.fuzzyInputs = new double[network.window];
         rbfLayer.fuzzyOutputs = new double[network.window];
-        rbfLayer.fuzzyWeights = new double[network.window][];
         for (int i = 0; i < network.window; i++) {
-            rbfLayer.fuzzyWeights[i] = new double[network.window];
-            for (int j = 0; j < network.window; j++) {
-                rbfLayer.fuzzyWeights[i][j] = MathUtils.randInt(random, -99, 99) / (100 * network.window);
-            }
-            rbfLayer.fuzzyCenters[i] = ((double) MathUtils.randInt(random, -99, 99)) / (100 * network.window);
+            rbfLayer.fuzzyCenters[i] = ((double) MathUtils.randInt(random, -99, 99)) / 100;
         }
 
         return network;

@@ -10,7 +10,8 @@ public enum ActivationFunctionType {
     R_SIGMOID,
     C_SIGMOID,
     H_TANGENT,
-    SINUS;
+    SINUS,
+    COS;
 
     @Override
     public String toString() {

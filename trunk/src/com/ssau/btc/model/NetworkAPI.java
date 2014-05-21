@@ -22,5 +22,7 @@ public interface NetworkAPI extends Serializable {
 
     double[][] getOutputHistory();
 
+    double[][] getWeightChangeHistory();
+
     void setSpeedRate(double speedRate);
 }

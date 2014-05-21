@@ -411,6 +411,14 @@ public class AppFrame extends AppFrameCL {
         eraComboBox.addItemListener(eraComboBoxListener);
         eraPanel.add(eraLabel);
         eraPanel.add(eraComboBox);
+
+        JLabel weighEraLabel = new JLabel(Messages.get("eraNumber.weights"));
+        weightEraComboBox = new JComboBox<>();
+        weightEraComboBoxListener = new WeightEraBoxChangeListener();
+        weightEraComboBox.addItemListener(weightEraComboBoxListener);
+        eraPanel.add(weighEraLabel);
+        eraPanel.add(weightEraComboBox);
+
         mistakeTabVPanel.add(eraPanel);
 
         double[][] outputsHistory = currentNetwork.getOutputHistory();
@@ -737,6 +745,7 @@ public class AppFrame extends AppFrameCL {
 
             addMistakeTab();
             fillEraComboBox(teachCycleCnt);
+            fillWeightEraComboBox(teachCycleCnt);
         }
 
         protected boolean validate() {
@@ -868,6 +877,19 @@ public class AppFrame extends AppFrameCL {
             diffSeries.removeAllSeries();
             diffSeries.addSeries(ChartHelper.createXYSeries(zeroEraOutputs));
             diffSeries.addSeries(ChartHelper.createXYSeries(nInputs));
+        }
+    }
+
+    private class WeightEraBoxChangeListener implements ItemListener {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            Integer era = (Integer) e.getItem();
+
+            double[][] weightChangeHistory = currentNetwork.getWeightChangeHistory();
+            double[] weightChanges = weightChangeHistory[era];
+
+            diffSeries.removeAllSeries();
+            diffSeries.addSeries(ChartHelper.createXYSeries(weightChanges));
         }
     }
 }

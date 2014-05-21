@@ -10,7 +10,8 @@ public class MLP {
 
     public double[] nData;
     public int dataLength;
-    public int window;
+    public int inputWindow;
+    public int outputWindow;
     /**
      * First dimension - layer number
      * Second dimension - number of a neuron in a layer
@@ -27,6 +28,7 @@ public class MLP {
     public double[][] differenceHistory;
     public double[][] outputsHistory;
     public double[] averageDiffPerEraHistory;
+    public double[][] weightChangeHistory;
     public double speedRate;
 
     protected NetworkMediator networkMediator;
@@ -47,15 +49,15 @@ public class MLP {
             }
             case SINUS:
                 return Math.sin(input);
+            case COS:
+                return Math.cos(input);
             default:
                 throw new RuntimeException("Default case operator is a rudiment");
         }
     }
 
-    protected double calcNetworkOutput(double[] inputValues) {
-        int firstLayerNeuronCnt = neuronInputs[0].length;
-        assert inputValues.length == firstLayerNeuronCnt;
-        System.arraycopy(inputValues, 0, neuronOutputs[0], 0, firstLayerNeuronCnt);
+    protected double[] calcNetworkOutput(double[] inputValues) {
+        System.arraycopy(inputValues, 0, neuronOutputs[0], 0, inputWindow);
 
         for (int i = 1; i < neuronInputs.length; i++) {
             for (int j = 0; j < neuronInputs[i].length; j++) {
@@ -65,7 +67,7 @@ public class MLP {
                 neuronOutputs[i][j] = calcNeuronOutput(neuronInputs[i][j], i);
             }
         }
-        return neuronOutputs[neuronOutputs.length - 1][0];
+        return neuronOutputs[neuronOutputs.length - 1];
     }
 
     protected void teach(int eraNumber) {
@@ -73,30 +75,35 @@ public class MLP {
         int outputLayerNumber = neuronOutputs.length - 1;
 
         // Копируем первые значения в массив истории выходов
-        System.arraycopy(nData, 0, outputsHistory[eraNumber], 0, window);
+        System.arraycopy(nData, 0, outputsHistory[eraNumber], 0, inputWindow);
 
-        double[] inputs = new double[window];
+        double[] inputs = new double[inputWindow];
+        double[] expected = new double[outputWindow];
 
-        while (iterationNumber < dataLength - window - 1) {
+        while (iterationNumber < dataLength - inputWindow - outputWindow - 1) {
             // Копируем участок выборки на вход сети
-            System.arraycopy(nData, iterationNumber, inputs, 0, window);
+            System.arraycopy(nData, iterationNumber, inputs, 0, inputWindow);
 
             // Вычисление выходного сигнала при текущих весах и входных данных
-            double output = networkMediator.calcNetOutput(inputs);
+            double outputs[] = networkMediator.calcNetOutput(inputs);
 
             // в классической сигмоиде нужно масштабировать значения
             if (activationFunctionTypes[outputLayerNumber] == ActivationFunctionType.C_SIGMOID) {
-                output = (output - 0.5) * 2;
+                for (int i = 0; i < outputs.length; i++) {
+                    outputs[i] = (outputs[i] - 0.5) * 2;
+                }
             }
 
+            System.arraycopy(nData, iterationNumber + inputWindow, expected, 0, outputWindow);
             // Вычисление величины несоответствия
-            double difference = output - nData[iterationNumber + window];
+            double difference = calcDifference(expected, outputs);
 
-            differenceHistory[eraNumber][iterationNumber + window] = difference;
-            outputsHistory[eraNumber][iterationNumber + window] = output;
+            differenceHistory[eraNumber][iterationNumber + inputWindow] = difference;
+            outputsHistory[eraNumber][iterationNumber + inputWindow] = outputs[0];
 
             // Корректировка весов
-            networkMediator.correctWeights(difference);
+            double weightChange = networkMediator.correctWeights(difference);
+            weightChangeHistory[eraNumber][iterationNumber] = weightChange;
 
             // сброс внутренного состояния
             resetCache();
@@ -110,10 +117,22 @@ public class MLP {
         averageDiffPerEraHistory[eraNumber] = Math.sqrt(sum / differenceHistory[eraNumber].length);
     }
 
-    protected void correctWeights(double difference) {
+    protected double calcDifference(double[] expected, double[] affected) {
+        assert expected.length == affected.length;
+        double diff = 0.0;
+        for (int i = 0; i < expected.length; i++) {
+            diff += (affected[i] - expected[i]);
+        }
+        return diff / expected.length;
+    }
+
+    protected double correctWeights(double difference) {
         int last = neuronInputs.length - 1;
-        neuronDeltas[last][0] = difference *
-                calcActivationFunctionDerivative(neuronOutputs[last][0], neuronInputs[last][0], last);
+
+        for (int i = 0; i < neuronOutputs[last].length; i++) {
+            neuronDeltas[last][i] = difference *
+                    calcActivationFunctionDerivative(neuronOutputs[last][i], neuronInputs[last][i], last);
+        }
 
         // Проход по слоям - с предпоследнего до первого
         // Вычисление величины дельта
@@ -129,15 +148,19 @@ public class MLP {
             }
         }
 
+        double deltaTotal = .0;
         // Прямой проход по слоям, корректировка весов для I>1
         for (int i = 1; i < last + 1; i++) {
             for (int j = 0; j < neuronInputs[i].length; j++) {
                 for (int u = 0; u < neuronInputs[i - 1].length; u++) {
                     double deltaW = neuronDeltas[i][j] * neuronOutputs[i - 1][u] * speedRate;
+
                     neuronWeights[i][j][u] -= deltaW;
+                    deltaTotal += Math.abs(neuronWeights[i][j][u]);
                 }
             }
         }
+        return deltaTotal;
     }
 
     private double calcActivationFunctionDerivative(double output, double input, int layerId) {
@@ -155,6 +178,8 @@ public class MLP {
 
             case SINUS:
                 return Math.cos(input);
+            case COS:
+                return -Math.sin(input);
             default:
                 throw new RuntimeException("Default case operator is a rudiment");
         }
@@ -169,11 +194,14 @@ public class MLP {
     protected void initDifferenceHistory(int teachCycleCount) {
         differenceHistory = new double[teachCycleCount][];
         outputsHistory = new double[teachCycleCount][];
+        weightChangeHistory = new double[teachCycleCount][];
 
         for (int i = 0; i < differenceHistory.length; i++) {
             differenceHistory[i] = new double[dataLength];
             outputsHistory[i] = new double[dataLength];
+            weightChangeHistory[i] = new double[dataLength];
         }
         averageDiffPerEraHistory = new double[teachCycleCount];
+
     }
 }

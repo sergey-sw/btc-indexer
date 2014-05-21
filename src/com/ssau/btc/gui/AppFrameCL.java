@@ -98,7 +98,9 @@ public class AppFrameCL extends JFrame {
 
     protected JPanel mistakeTabMainPanel;
     protected JComboBox<Integer> eraComboBox;
+    protected JComboBox<Integer> weightEraComboBox;
     protected ItemListener eraComboBoxListener;
+    protected ItemListener weightEraComboBoxListener;
     protected XYSeriesCollection diffSeries;
 
     public AppFrameCL() {
@@ -136,6 +138,17 @@ public class AppFrameCL extends JFrame {
         }
 
         eraComboBox.addItemListener(eraComboBoxListener);
+    }
+
+    protected void fillWeightEraComboBox(int endVal) {
+        weightEraComboBox.removeItemListener(weightEraComboBoxListener);
+        weightEraComboBox.removeAllItems();
+
+        for (int i = 0; i < endVal; i++) {
+            weightEraComboBox.addItem(i);
+        }
+
+        weightEraComboBox.addItemListener(weightEraComboBoxListener);
     }
 
     protected class SettingsTableModel extends DefaultTableModel {

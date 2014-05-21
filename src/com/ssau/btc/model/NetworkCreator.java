@@ -31,7 +31,8 @@ public class NetworkCreator {
         RBFLayer rbfLayer = network.rbfLayer = new RBFLayer();
         network.init();
 
-        network.window = mlp.window = rbfLayer.size = layers[0];
+        network.window = mlp.inputWindow = rbfLayer.size = layers[0];
+        mlp.outputWindow = layers[layers.length - 1];
 
         mlp.neuronInputs = new double[layerInfos.size()][];
         mlp.zeroArray = new double[layerInfos.size()][];

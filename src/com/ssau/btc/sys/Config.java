@@ -15,7 +15,7 @@ public class Config {
     public static final int MAX_LAYER_NEURON_CNT = 100;
 
     public static final String DEFAULT_ERA_CNT = "10";
-    public static final String DEFAULT_TEACH_COEFF = "0.2";
+    public static final String DEFAULT_TEACH_COEFF = "0.02";
     public static final String MIN_DATE_FROM = "2012-01-01";
     public static final int MAX_TEACH_CYCLE_COUNT = 100;
     public static final String DEFAULT_FORECAST_SIZE = "10";
@@ -31,9 +31,9 @@ public class Config {
 
     public static List<LayerInfo> getDefaultStructure() {
         List<LayerInfo> items = new ArrayList<>();
-        items.add(new LayerInfo(8, null, 0));
-        items.add(new LayerInfo(16, ActivationFunctionType.H_TANGENT, 0.15));
-        items.add(new LayerInfo(1, ActivationFunctionType.SINUS, 0.5));
+        items.add(new LayerInfo(20, null, 0));
+        items.add(new LayerInfo(40, ActivationFunctionType.R_SIGMOID, 0.75));
+        items.add(new LayerInfo(8, ActivationFunctionType.SINUS, 0.85));
         return items;
     }
 

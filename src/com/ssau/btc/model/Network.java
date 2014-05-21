@@ -34,14 +34,14 @@ public class Network implements NetworkAPI {
     private NetworkMediator networkMediator = new NetworkMediator() {
 
         @Override
-        public double calcNetOutput(double[] inputs) {
+        public double[] calcNetOutput(double[] inputs) {
             //double[] outputs = rbfLayer.calcRBFOutput(inputs);
             return mlp.calcNetworkOutput(inputs);
         }
 
         @Override
-        public void correctWeights(double difference) {
-            mlp.correctWeights(difference);
+        public double correctWeights(double difference) {
+            return mlp.correctWeights(difference);
         }
 
         @Override
@@ -65,7 +65,7 @@ public class Network implements NetworkAPI {
 
     public void init() {
         mlp.init(networkMediator);
-        //rbfLayer.init(networkMediator);
+        rbfLayer.init(networkMediator);
     }
 
     /* Maps value from interval [A;B] to interval [-1;1] */
@@ -86,7 +86,7 @@ public class Network implements NetworkAPI {
             throw new IllegalStateException("Data must be initialized before teaching. Current state : " + netState);
         }
         networkMediator.initDifferenceHistory(teachCycleCount);
-        // rbfLayer.teach();
+        //rbfLayer.teach();
         for (int i = 0; i < teachCycleCount; i++) {
             mlp.teach(i);
         }
@@ -104,22 +104,22 @@ public class Network implements NetworkAPI {
         // Первые {inputCount} точек массива прогноза равны исходным значениям
         System.arraycopy(copyInput, 0, forecast, 0, window);
 
-        //int outputId = neuronOutputs.length - 1;
-
         double[] inputs = new double[window];
         // Начиная с позиции {Число нейронов входного слоя}
         for (int j = window; j < forecastSize + window; j++) {
             // Задание входных значений нейронам входного слоя
-            System.arraycopy(forecast, j - window, inputs/*inputsMLP*/, 0, window);
+            System.arraycopy(forecast, j - window, inputs, 0, window);
 
             // Вычисление выходного значения
-            double output = networkMediator.calcNetOutput(inputs);
+            double[] outputs = networkMediator.calcNetOutput(inputs);
 
             if (outputIsSigmoid) {
-                output = (output - 0.5) * 2;
+                for (int i = 0; i < outputs.length; i++) {
+                    outputs[i] = (outputs[i] - 0.5) * 2;
+                }
             }
 
-            forecast[j] = output;
+            forecast[j] = outputs[0];
 
             mlp.resetCache();
         }
@@ -179,6 +179,11 @@ public class Network implements NetworkAPI {
     @Override
     public double[][] getOutputHistory() {
         return mlp.outputsHistory;
+    }
+
+    @Override
+    public double[][] getWeightChangeHistory() {
+        return mlp.weightChangeHistory;
     }
 
     @Override

@@ -6,9 +6,9 @@ package com.ssau.btc.model;
  */
 public interface NetworkMediator {
 
-    double calcNetOutput(double[] inputs);
+    double[] calcNetOutput(double[] inputs);
 
-    void correctWeights(double difference);
+    double correctWeights(double difference);
 
     void onDataInit();
 

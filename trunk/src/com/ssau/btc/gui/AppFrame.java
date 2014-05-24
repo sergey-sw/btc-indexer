@@ -2,12 +2,10 @@ package com.ssau.btc.gui;
 
 import com.intelli.ray.core.Inject;
 import com.intelli.ray.core.ManagedComponent;
+import com.intelli.ray.core.Scope;
 import com.ssau.btc.model.*;
 import com.ssau.btc.sys.*;
-import com.ssau.btc.utils.ChartHelper;
-import com.ssau.btc.utils.DateUtils;
-import com.ssau.btc.utils.DemoValuesHelper;
-import com.ssau.btc.utils.IndexSnapshotUtils;
+import com.ssau.btc.utils.*;
 import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 import org.jfree.chart.ChartPanel;
@@ -36,10 +34,11 @@ import java.util.concurrent.TimeUnit;
  * Author: Sergey42
  * Date: 14.02.14 21:29
  */
-@ManagedComponent(name = "AppFrame")
+@ManagedComponent(name = AppFrame.NAME, scope = Scope.PROTOTYPE)
 public class AppFrame extends AppFrameCL {
 
     private static final long serialVersionUID = 5082357744733070890L;
+    public static final String NAME = "AppFrame";
 
     @Inject
     protected CurrentPriceProvider currentPriceProvider;
@@ -49,10 +48,13 @@ public class AppFrame extends AppFrameCL {
     protected WebLoaderAPI webDataLoader;
     @Inject
     protected DataSupplier dataSupplier;
+    @Inject
+    protected LocaleHelper localeHelper;
 
     protected NetworkAPI currentNetwork;
 
     public void init() {
+        initLocation();
         initComponents();
         threadManager.scheduleTask(new Runnable() {
             @Override
@@ -102,6 +104,7 @@ public class AppFrame extends AppFrameCL {
 
         initInfoTab();
         initNetworkTab();
+        initConfigTab();
         //initMistakeTab();
 
         add(jTabbedPane);
@@ -115,7 +118,7 @@ public class AppFrame extends AppFrameCL {
         JPanel ratesPanel = new JPanel(new GridLayout(4 + HISTORY_DAY_COUNT, 3, 20, 5));
         ratesPanel.setPreferredSize(new Dimension(350, 450));
 
-        JLabel ratesLabel = new JLabel(String.format(H2_PATTERN, Messages.get("ratesCaption")));
+        JLabel ratesLabel = new JLabel(String.format(H2_PATTERN, messages.getMessage("ratesCaption")));
         rateTsLabel = new JLabel();
         ratesPanel.add(ratesLabel);
         ratesPanel.add(rateTsLabel);
@@ -132,7 +135,7 @@ public class AppFrame extends AppFrameCL {
         ratesPanel.add(new JLabel());
         ratesPanel.add(new JLabel());
 
-        ratesPanel.add(new JLabel(String.format(H3_PATTERN, Messages.get("prevDays"))));
+        ratesPanel.add(new JLabel(String.format(H3_PATTERN, messages.getMessage("prevDays"))));
         ratesPanel.add(new JLabel());
         ratesPanel.add(new JLabel());
 
@@ -153,6 +156,9 @@ public class AppFrame extends AppFrameCL {
         chartJPanel.setLayout(chartBoxLayout);
 
         JPanel buttonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        dayModeBtn = new JButton(messages.getMessage("day"));
+        monthModeBtn = new JButton(messages.getMessage("month"));
+        yearModeBtn = new JButton(messages.getMessage("year"));
         buttonsPanel.add(dayModeBtn);
         buttonsPanel.add(monthModeBtn);
         buttonsPanel.add(yearModeBtn);
@@ -168,9 +174,9 @@ public class AppFrame extends AppFrameCL {
                 Collection<IndexSnapshot> indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
                 infoPriceTimeSeriesCollection = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour");
                 priceInfoChart = ChartHelper.createTimeChart(infoPriceTimeSeriesCollection,
-                        Messages.get("btc24Hour"),
-                        Messages.get("btc24HourX"),
-                        Messages.get("btcIndexY"));
+                        messages.getMessage("btc24Hour"),
+                        messages.getMessage("btc24HourX"),
+                        messages.getMessage("btcIndexY"));
 
                 final ChartPanel chartPanel = new ChartPanel(priceInfoChart);
                 Dimension screenSize = getToolkit().getScreenSize();
@@ -185,7 +191,7 @@ public class AppFrame extends AppFrameCL {
         });
 
 
-        jTabbedPane.addTab(Messages.get("infoTab"), infoPanel);
+        jTabbedPane.addTab(messages.getMessage("infoTab"), infoPanel);
     }
 
     protected void initNetworkTab() {
@@ -198,13 +204,13 @@ public class AppFrame extends AppFrameCL {
         networkMainPanel.add(networkLeftVPanel);
 
         JPanel netButtonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        createNetBtn = new JButton(Messages.get("newNet"));
+        createNetBtn = new JButton(messages.getMessage("newNet"));
         createNetBtn.addActionListener(new CreateNetButtonHandler());
         netButtonsPanel.add(createNetBtn);
-        loadNetBtn = new JButton(Messages.get("loadNet"));
+        loadNetBtn = new JButton(messages.getMessage("loadNet"));
         loadNetBtn.addActionListener(new LoadNetButtonHandler());
         netButtonsPanel.add(loadNetBtn);
-        saveNetBtn = new JButton(Messages.get("saveNet"));
+        saveNetBtn = new JButton(messages.getMessage("saveNet"));
         saveNetBtn.addActionListener(new SaveNetButtonHandler());
         saveNetBtn.setEnabled(false);
         netButtonsPanel.add(saveNetBtn);
@@ -219,17 +225,17 @@ public class AppFrame extends AppFrameCL {
         BoxLayout tablePanelInnerLayout = new BoxLayout(structureTablePanelInner, BoxLayout.Y_AXIS);
         structureTablePanelInner.setLayout(tablePanelInnerLayout);
 
-        JLabel tableLabel = new JLabel(Messages.get("tableLabelCaption"));
+        JLabel tableLabel = new JLabel(messages.getMessage("tableLabelCaption"));
         structureTablePanelInner.add(tableLabel);
         structureTablePanelInner.add(Box.createVerticalStrut(10));
 
         JPanel layerButtonsPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        addLayerBtn = new JButton(Messages.get("addLayer"));
+        addLayerBtn = new JButton(messages.getMessage("addLayer"));
         addLayerBtn.addActionListener(new AddLayerHandler());
-        removeLayerBtn = new JButton(Messages.get("removeLayer"));
+        removeLayerBtn = new JButton(messages.getMessage("removeLayer"));
         removeLayerBtn.addActionListener(new RemoveLayerHandler());
         removeLayerBtn.setEnabled(false);
-        standardLayersBtn = new JButton(Messages.get("standardLayers"));
+        standardLayersBtn = new JButton(messages.getMessage("standardLayers"));
         standardLayersBtn.addActionListener(new StandardLayerHandler());
         layerButtonsPanel.add(addLayerBtn);
         layerButtonsPanel.add(removeLayerBtn);
@@ -282,14 +288,14 @@ public class AppFrame extends AppFrameCL {
         netStatePanel = new JPanel(SIMPLE_FLOW_LAYOUT);
         netStatePanel.setVisible(false);
 
-        JLabel netStateCaption = new JLabel(Messages.get("netState"));
+        JLabel netStateCaption = new JLabel(messages.getMessage("netState"));
         netStatePanel.add(netStateCaption);
         netStateLabel = new JLabel();
         netStatePanel.add(netStateLabel);
         structureTablePanelInner.add(netStatePanel);
 
         JPanel buildNetButtonPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        buildNetBtn = new JButton(Messages.get("buildNet"));
+        buildNetBtn = new JButton(messages.getMessage("buildNet"));
         buildNetBtn.addActionListener(new BuildNetButtonHandler());
         buildNetButtonPanel.add(buildNetBtn);
         structureTablePanelInner.add(buildNetButtonPanel);
@@ -303,33 +309,33 @@ public class AppFrame extends AppFrameCL {
         teachPanelInner.setLayout(teachPanelInnerLayout);
         teachPanelOuter.add(teachPanelInner);
 
-        JLabel teachPanelLabel = new JLabel(Messages.get("teachPanel"));
+        JLabel teachPanelLabel = new JLabel(messages.getMessage("teachPanel"));
         teachPanelInner.add(teachPanelLabel);
         teachPanelInner.add(Box.createVerticalStrut(MARGIN));
 
         teachPanel = new JPanel(new GridLayout(5, 2, 10, 10));
 
-        JLabel dateFrom = new JLabel(Messages.get("dateFrom"));
+        JLabel dateFrom = new JLabel(messages.getMessage("dateFrom"));
         fromDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
         teachPanel.add(dateFrom);
         teachPanel.add(fromDatePicker);
 
-        JLabel dateTill = new JLabel(Messages.get("dateTill"));
+        JLabel dateTill = new JLabel(messages.getMessage("dateTill"));
         tillDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
         teachPanel.add(dateTill);
         teachPanel.add(tillDatePicker);
 
-        JLabel teachCoeffLabel = new JLabel(Messages.get("teachCoeff"));
+        JLabel teachCoeffLabel = new JLabel(messages.getMessage("teachCoeff"));
         speedRateTF = new JTextField(Config.DEFAULT_TEACH_COEFF);
         teachPanel.add(teachCoeffLabel);
         teachPanel.add(speedRateTF);
 
-        JLabel eraCntLabel = new JLabel(Messages.get("eraCount"));
+        JLabel eraCntLabel = new JLabel(messages.getMessage("eraCount"));
         teachCycleCountTF = new JTextField(Config.DEFAULT_ERA_CNT);
         teachPanel.add(eraCntLabel);
         teachPanel.add(teachCycleCountTF);
 
-        teachBtn = new JButton(Messages.get("teachBtn"));
+        teachBtn = new JButton(messages.getMessage("teachBtn"));
         teachBtn.addActionListener(new TeachNetButtonHandler());
         teachPanel.add(teachBtn);
 
@@ -344,26 +350,26 @@ public class AppFrame extends AppFrameCL {
         forecastPanelInner.setLayout(forecastPanelInnerLayout);
         forecastPanelOuter.add(forecastPanelInner);
 
-        JLabel forecastLabel = new JLabel(Messages.get("forecastPanel"));
+        JLabel forecastLabel = new JLabel(messages.getMessage("forecastPanel"));
         forecastPanelInner.add(forecastLabel);
         forecastPanelInner.add(Box.createVerticalStrut(MARGIN));
 
         JPanel forecastParamsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         forecastPanelInner.add(forecastParamsPanel);
 
-        JLabel forecastDateFrom = new JLabel(Messages.get("dateFrom"));
+        JLabel forecastDateFrom = new JLabel(messages.getMessage("dateFrom"));
         forecastDateTF = new JTextField();
         forecastDateTF.setFocusable(false);
         forecastDateTF.setPreferredSize(fromDatePicker.getPreferredSize());
         forecastParamsPanel.add(forecastDateFrom);
         forecastParamsPanel.add(forecastDateTF);
 
-        JLabel forecastSizeLabel = new JLabel(Messages.get("forecastSize"));
+        JLabel forecastSizeLabel = new JLabel(messages.getMessage("forecastSize"));
         forecastParamsPanel.add(forecastSizeLabel);
         forecastSizeTF = new JTextField(Config.DEFAULT_FORECAST_SIZE);
         forecastParamsPanel.add(forecastSizeTF);
 
-        forecastBtn = new JButton(Messages.get("forecastBtn"));
+        forecastBtn = new JButton(messages.getMessage("forecastBtn"));
         forecastBtn.addActionListener(new ForecastButtonHandler());
         forecastParamsPanel.add(forecastBtn);
 
@@ -388,7 +394,52 @@ public class AppFrame extends AppFrameCL {
 
         networkMainPanel.add(networkTabChartsRightVPanel);
 
-        jTabbedPane.addTab(Messages.get("settingTab"), scrollPane);
+        jTabbedPane.addTab(messages.getMessage("settingTab"), scrollPane);
+    }
+
+    protected void initConfigTab() {
+        configMainPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+        jTabbedPane.addTab(messages.getMessage("configTab"), configMainPanel);
+
+        JPanel configInnerPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
+
+        configGridPanel = new JPanel(new GridLayout(5, 2, 25, 10));
+        configGridPanel.setPreferredSize(new Dimension(500, 200));
+
+        JLabel langLabel = new JLabel(messages.getMessage("language"));
+        languageBox = new JComboBox<>(new String[]{localeHelper.getRussianLang(), localeHelper.getEnglishLang()});
+        languageBox.setSelectedItem(LocaleHelper.RU.equalsIgnoreCase(Config.getLocale())
+                ? localeHelper.getRussianLang()
+                : localeHelper.getEnglishLang());
+        configGridPanel.add(langLabel);
+        configGridPanel.add(languageBox);
+
+        JLabel dbUrlLabel = new JLabel(messages.getMessage("dbUrl"));
+        dbUrlTF = new JTextField();
+        dbUrlTF.setText(Config.getDbUrl());
+        configGridPanel.add(dbUrlLabel);
+        configGridPanel.add(dbUrlTF);
+
+        JLabel dbUserLabel = new JLabel(messages.getMessage("dbUser"));
+        dbUserTF = new JTextField();
+        dbUserTF.setText(Config.getDbUser());
+        configGridPanel.add(dbUserLabel);
+        configGridPanel.add(dbUserTF);
+
+        JLabel dbPassLabel = new JLabel(messages.getMessage("dbPass"));
+        dbPassTF = new JPasswordField();
+        dbPassTF.setText(Config.getDbPass());
+        configGridPanel.add(dbPassLabel);
+        configGridPanel.add(dbPassTF);
+
+        applyConfigBtn = new JButton(messages.getMessage("apply"));
+        applyConfigBtn.addActionListener(new ApplyConfigButtonHandler());
+        configGridPanel.add(applyConfigBtn);
+        configGridPanel.add(new JLabel(""));
+
+        configInnerPanel.add(configGridPanel);
+        configMainPanel.add(configInnerPanel);
+
     }
 
     protected void addMistakeTab() {
@@ -397,7 +448,7 @@ public class AppFrame extends AppFrameCL {
         }
 
         mistakeTabMainPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        jTabbedPane.addTab(Messages.get("mistakesTab"), mistakeTabMainPanel);
+        jTabbedPane.addTab(messages.getMessage("mistakesTab"), mistakeTabMainPanel);
 
         JPanel mistakeTabVPanel = new JPanel();
         BoxLayout mistakeTabVPanelLayout = new BoxLayout(mistakeTabVPanel, BoxLayout.Y_AXIS);
@@ -405,14 +456,14 @@ public class AppFrame extends AppFrameCL {
         mistakeTabMainPanel.add(mistakeTabVPanel);
 
         JPanel eraPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        JLabel eraLabel = new JLabel(Messages.get("eraNumber"));
+        JLabel eraLabel = new JLabel(messages.getMessage("eraNumber"));
         eraComboBox = new JComboBox<>();
         eraComboBoxListener = new EraBoxChangeListener();
         eraComboBox.addItemListener(eraComboBoxListener);
         eraPanel.add(eraLabel);
         eraPanel.add(eraComboBox);
 
-        JLabel weighEraLabel = new JLabel(Messages.get("eraNumber.weights"));
+        JLabel weighEraLabel = new JLabel(messages.getMessage("eraNumber.weights"));
         weightEraComboBox = new JComboBox<>();
         weightEraComboBoxListener = new WeightEraBoxChangeListener();
         weightEraComboBox.addItemListener(weightEraComboBoxListener);
@@ -427,9 +478,9 @@ public class AppFrame extends AppFrameCL {
 
         diffSeries = ChartHelper.createXYSeriesCollection(zeroEraOutputs, nInputs);
         JFreeChart chart = ChartHelper.createDoublesChart(diffSeries,
-                Messages.get("teachingInEra"),
-                Messages.get("X"),
-                Messages.get("Y"));
+                messages.getMessage("teachingInEra"),
+                messages.getMessage("X"),
+                messages.getMessage("Y"));
         chart.getXYPlot().getRangeAxis().setUpperBound(1.1);
         chart.getXYPlot().getRangeAxis().setLowerBound(-1.1);
 
@@ -534,11 +585,11 @@ public class AppFrame extends AppFrameCL {
 
             priceInfoChart.setTitle(
                     mode == DAY ?
-                            Messages.get("btc24Hour")
+                            messages.getMessage("btc24Hour")
                             : mode == MONTH
-                            ? Messages.get("btcMonth")
-                            : Messages.get("btcYear"));
-            priceInfoChart.getXYPlot().getDomainAxis().setLabel(mode == DAY ? Messages.get("btc24TimeX") : Messages.get("btc24DateX"));
+                            ? messages.getMessage("btcMonth")
+                            : messages.getMessage("btcYear"));
+            priceInfoChart.getXYPlot().getDomainAxis().setLabel(mode == DAY ? messages.getMessage("btc24TimeX") : messages.getMessage("btc24DateX"));
 
         }
     }
@@ -636,32 +687,32 @@ public class AppFrame extends AppFrameCL {
             for (LayerInfo layerInfo : structureTableModel.items) {
                 if (layerInfo.functionType == null && i != 0) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.format("error.functionTypeIsNull", i + 1),
+                            messages.getMessage("error"),
+                            messages.formatMessage("error.functionTypeIsNull", i + 1),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
                 if (layerInfo.neuronCnt < 0 && i != 0) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.format("error.negativeNeuronCount", i + 1),
+                            messages.getMessage("error"),
+                            messages.formatMessage("error.negativeNeuronCount", i + 1),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
                 if (layerInfo.neuronCnt > Config.MAX_LAYER_NEURON_CNT) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.format("error.maxNeuronCount", i + 1, Config.MAX_LAYER_NEURON_CNT),
+                            messages.getMessage("error"),
+                            messages.formatMessage("error.maxNeuronCount", i + 1, Config.MAX_LAYER_NEURON_CNT),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
                 if (layerInfo.coefficient <= -1 || layerInfo.coefficient >= 1) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.format("error.invalidActivateCoefficient", i + 1),
+                            messages.getMessage("error"),
+                            messages.formatMessage("error.invalidActivateCoefficient", i + 1),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
@@ -706,14 +757,14 @@ public class AppFrame extends AppFrameCL {
 
             currentNetwork.teach();
 
-            netStateLabel.setText(Messages.get("trainedNetState"));
+            netStateLabel.setText(messages.getMessage("trainedNetState"));
 
             double[] adpeh = currentNetwork.getAverageDiffPerEraHistory();
             XYDataset xyDataset = ChartHelper.createXYSeriesCollection(adpeh);
             JFreeChart mistakesChart = ChartHelper.createDoublesChart(xyDataset,
-                    Messages.get("trainErrors"),
-                    Messages.get("trainErrorsX"),
-                    Messages.get("trainErrorsY"));
+                    messages.getMessage("trainErrors"),
+                    messages.getMessage("trainErrorsX"),
+                    messages.getMessage("trainErrorsY"));
 
             final ChartPanel mistakeChartPanel = new ChartPanel(mistakesChart);
             Dimension chartSize = new Dimension(600, 300);
@@ -725,9 +776,9 @@ public class AppFrame extends AppFrameCL {
             if (!Config.USE_DEMO_FUNCTION) {
                 networkDataSet = ChartHelper.createTimeDataSet(snapshots, "btcIndex");
                 valuesChart = ChartHelper.createTimeChart(networkDataSet,
-                        Messages.get("btcIndex"),
-                        Messages.get("btcIndexX"),
-                        Messages.get("btcIndexY"));
+                        messages.getMessage("btcIndex"),
+                        messages.getMessage("btcIndexX"),
+                        messages.getMessage("btcIndexY"));
             } else {
                 networkDataSet = ChartHelper.createXYSeriesCollection(doubles, 0, Config.DEMO_FUNCTION_STEP);
                 valuesChart = ChartHelper.createDoublesChart(networkDataSet, "Demo function", "X", "Y");
@@ -752,16 +803,16 @@ public class AppFrame extends AppFrameCL {
             from = (Calendar) fromDatePicker.getModel().getValue();
             if (from == null) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.get("error.nullDateFrom"),
+                        messages.getMessage("error"),
+                        messages.getMessage("error.nullDateFrom"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
             if (from.getTime().before(DateUtils.getDate(Config.MIN_DATE_FROM))) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.format("error.minDateFrom", Config.MIN_DATE_FROM),
+                        messages.getMessage("error"),
+                        messages.formatMessage("error.minDateFrom", Config.MIN_DATE_FROM),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
@@ -769,16 +820,16 @@ public class AppFrame extends AppFrameCL {
             till = (Calendar) tillDatePicker.getModel().getValue();
             if (till == null) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.get("error.nullDateTill"),
+                        messages.getMessage("error"),
+                        messages.getMessage("error.nullDateTill"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
             if (till.getTime().after(new Date())) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.get("error.maxDateTill"),
+                        messages.getMessage("error"),
+                        messages.getMessage("error.maxDateTill"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
@@ -788,16 +839,16 @@ public class AppFrame extends AppFrameCL {
 
                 if (teachCycleCnt <= 0 || teachCycleCnt > Config.MAX_TEACH_CYCLE_COUNT) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.format("error.badEraCnt", Config.MAX_TEACH_CYCLE_COUNT),
+                            messages.getMessage("error"),
+                            messages.formatMessage("error.badEraCnt", Config.MAX_TEACH_CYCLE_COUNT),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
             } catch (Exception ex) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.get("error.invalidEraCnt"),
+                        messages.getMessage("error"),
+                        messages.getMessage("error.invalidEraCnt"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
@@ -807,16 +858,16 @@ public class AppFrame extends AppFrameCL {
 
                 if (speedRate <= 0 || speedRate >= 1) {
                     showMessage(
-                            Messages.get("error"),
-                            Messages.get("error.badTeachCoeff"),
+                            messages.getMessage("error"),
+                            messages.getMessage("error.badTeachCoeff"),
                             JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
             } catch (Exception ex) {
                 showMessage(
-                        Messages.get("error"),
-                        Messages.get("error.invalidTeachCoeff"),
+                        messages.getMessage("error"),
+                        messages.getMessage("error.invalidTeachCoeff"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
@@ -851,12 +902,12 @@ public class AppFrame extends AppFrameCL {
                 forecastSize = Integer.valueOf(forecastStr);
 
                 if (forecastSize <= 0) {
-                    showMessage(Messages.get("error"), Messages.get("error.badForecastSize"), JOptionPane.ERROR_MESSAGE);
+                    showMessage(messages.getMessage("error"), messages.getMessage("error.badForecastSize"), JOptionPane.ERROR_MESSAGE);
                     return false;
                 }
 
             } catch (Exception ex) {
-                showMessage(Messages.get("error"), Messages.get("error.invalidForecastSize"), JOptionPane.ERROR_MESSAGE);
+                showMessage(messages.getMessage("error"), messages.getMessage("error.invalidForecastSize"), JOptionPane.ERROR_MESSAGE);
                 return false;
             }
 
@@ -880,7 +931,7 @@ public class AppFrame extends AppFrameCL {
         }
     }
 
-    private class WeightEraBoxChangeListener implements ItemListener {
+    protected class WeightEraBoxChangeListener implements ItemListener {
         @Override
         public void itemStateChanged(ItemEvent e) {
             Integer era = (Integer) e.getItem();
@@ -890,6 +941,30 @@ public class AppFrame extends AppFrameCL {
 
             diffSeries.removeAllSeries();
             diffSeries.addSeries(ChartHelper.createXYSeries(weightChanges));
+        }
+    }
+
+    protected class ApplyConfigButtonHandler implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String url = dbUrlTF.getText();
+            String user = dbUserTF.getText();
+            String pass = new String(dbPassTF.getPassword());
+            String lang = (String) languageBox.getSelectedItem();
+            String langKey = localeHelper.getRussianLang().equals(lang)
+                    ? LocaleHelper.RU
+                    : LocaleHelper.EN;
+
+            Config.setLocale(langKey);
+            Config.setDbUrl(url);
+            Config.setDbPass(pass);
+            Config.setDbUser(user);
+            Config.flush();
+            AppFrame.this.showMessage(
+                    messages.getMessage("attention"),
+                    messages.getMessage("applyAfterRestart"),
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 }

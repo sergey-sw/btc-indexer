@@ -1,9 +1,10 @@
 package com.ssau.btc.gui;
 
+import com.intelli.ray.core.Inject;
+import com.ssau.btc.messages.Messages;
 import com.ssau.btc.model.ActivationFunctionType;
 import com.ssau.btc.model.LayerInfo;
 import com.ssau.btc.sys.CurrentPriceProvider;
-import com.ssau.btc.sys.Messages;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -28,6 +29,9 @@ public class AppFrameCL extends JFrame {
 
     private static final long serialVersionUID = 7185169783868241076L;
 
+    @Inject
+    protected Messages messages;
+
     protected static final int MARGIN = 15;
 
     protected JTabbedPane jTabbedPane;
@@ -44,9 +48,9 @@ public class AppFrameCL extends JFrame {
     protected JLabel usdDiffValue;
     protected JLabel rateTsLabel;
 
-    protected JButton dayModeBtn = new JButton(Messages.get("day"));
-    protected JButton monthModeBtn = new JButton(Messages.get("month"));
-    protected JButton yearModeBtn = new JButton(Messages.get("year"));
+    protected JButton dayModeBtn;
+    protected JButton monthModeBtn;
+    protected JButton yearModeBtn;
     protected JFreeChart priceInfoChart;
 
     protected int lastInfoMode = -1;
@@ -103,12 +107,19 @@ public class AppFrameCL extends JFrame {
     protected ItemListener weightEraComboBoxListener;
     protected XYSeriesCollection diffSeries;
 
+    protected JPanel configMainPanel;
+    protected JPanel configGridPanel;
+    protected JComboBox<String> languageBox;
+    protected JTextField dbUrlTF;
+    protected JTextField dbUserTF;
+    protected JPasswordField dbPassTF;
+    protected JButton applyConfigBtn;
+
     public AppFrameCL() {
         MARGIN_FLOW_LAYOUT.setHgap(MARGIN);
         MARGIN_FLOW_LAYOUT.setVgap(MARGIN);
 
         initBase();
-        initLocation();
     }
 
     protected void initBase() {
@@ -121,12 +132,16 @@ public class AppFrameCL extends JFrame {
     }
 
     protected void initLocation() {
-        setTitle(Messages.get("title"));
+        setTitle(messages.getMessage("title"));
         setSize(getToolkit().getScreenSize());
     }
 
-    protected void showMessage(String caption, String message, int messageType) {
+    public void showMessage(String caption, String message, int messageType) {
         JOptionPane.showMessageDialog(this, message, caption, messageType);
+    }
+
+    public void showMessage(String message) {
+        JOptionPane.showMessageDialog(this, message);
     }
 
     protected void fillEraComboBox(int endVal) {
@@ -161,7 +176,10 @@ public class AppFrameCL extends JFrame {
         public SettingsTableModel() {
             super();
             headers = new String[]
-                    {Messages.get("neuronLabel"), Messages.get("functionLabel"), Messages.get("functionCoefficientLabel")};
+                    {
+                            messages.getMessage("neuronLabel"),
+                            messages.getMessage("functionLabel"),
+                            messages.getMessage("functionCoefficientLabel")};
             classes = new Class[]{int.class, ActivationFunctionType.class, double.class};
         }
 

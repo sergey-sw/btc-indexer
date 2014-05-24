@@ -62,17 +62,17 @@ public class Config {
     public static final String DIRECTORY = "D:\\";
 
     public static boolean USE_DEMO_FUNCTION = true;
-    public static int DEMO_FUNCTION_SIZE = 314 * 4;
-    public static double DEMO_FUNCTION_STEP = 0.01;
+    public static int DEMO_FUNCTION_SIZE = 314 * 4 / 20;
+    public static double DEMO_FUNCTION_STEP = 0.2;
 
     public static int CMEANS_MAX_ITERATIONS = 20;
     public static double CMEANS_ERROR_BARRIER = 0.001;
 
     public static List<LayerInfo> getDefaultStructure() {
         List<LayerInfo> items = new ArrayList<>();
-        items.add(new LayerInfo(20, null, 0));
-        items.add(new LayerInfo(40, ActivationFunctionType.R_SIGMOID, 0.75));
-        items.add(new LayerInfo(8, ActivationFunctionType.SINUS, 0.85));
+        items.add(new LayerInfo(8, null, 0));
+        items.add(new LayerInfo(16, ActivationFunctionType.R_SIGMOID, 0.75));
+        items.add(new LayerInfo(1, ActivationFunctionType.SINUS, 0.85));
         return items;
     }
 

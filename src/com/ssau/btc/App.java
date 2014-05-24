@@ -2,6 +2,8 @@ package com.ssau.btc;
 
 import com.intelli.ray.core.Context;
 import com.ssau.btc.gui.AppFrame;
+import com.ssau.btc.messages.Messages;
+import com.ssau.btc.sys.Config;
 import com.ssau.btc.sys.Synchronizer;
 
 import java.io.IOException;
@@ -12,8 +14,11 @@ import java.io.IOException;
  */
 public class App {
 
+    public static Context context;
+    public static AppFrame appFrame;
+
     public static void main(String[] args) {
-        Context context = new Context(new String[]{"btc-indexer"}, "com.ssau.btc");
+        context = new Context(new String[]{"btc-indexer"}, "com.ssau.btc");
         try {
             context.printConfiguredBeans(null);
         } catch (IOException e) {
@@ -22,7 +27,10 @@ public class App {
         Synchronizer synchronizer = context.getBean(Synchronizer.class);
         synchronizer.initTimer();
 
-        AppFrame appFrame = context.getBean(AppFrame.class);
+        Messages messages = context.getBean(Messages.class);
+        messages.init(Config.getLocale());
+
+        appFrame = context.getPrototype(AppFrame.NAME);
         appFrame.init();
         appFrame.setVisible(true);
     }

@@ -1,4 +1,6 @@
-package com.ssau.btc.sys;
+package com.ssau.btc.messages;
+
+import com.intelli.ray.core.ManagedComponent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,19 +11,13 @@ import java.util.Properties;
  * Author: Sergey42
  * Date: 29.10.13 12:34
  */
+@ManagedComponent(name = "Messages")
 public class Messages {
 
-    //TODO config
-    static {
-        init("ru");
-    }
+    protected Properties properties;
 
-    private static Messages instance;
-
-    private Properties properties;
-
-    private Messages(String locale) {
-        String suffix = locale.startsWith("ru") ? "_ru" : "";
+    public void init(String locale) {
+        String suffix = "_" + locale.toLowerCase();
         InputStream stream = getClass().getResourceAsStream("messages" + suffix + ".properties");
         try {
             InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
@@ -39,28 +35,12 @@ public class Messages {
         }
     }
 
-    public static void init(String locale) {
-        instance = new Messages(locale);
-    }
-
-    public static String get(String key) {
-        if (instance == null)
-            throw new IllegalStateException("Messages not initialized");
-        return instance.getMessage(key);
-    }
-
-    public static String format(String key, Object... args) {
-        if (instance == null)
-            throw new IllegalStateException("Messages not initialized");
-        return instance.formatMessage(key, args);
-    }
-
-    private String getMessage(String key) {
+    public String getMessage(String key) {
         String message = properties.getProperty(key);
         return message == null ? key : message;
     }
 
-    protected String formatMessage(String key, Object... args) {
+    public String formatMessage(String key, Object... args) {
         String message = properties.getProperty(key);
         return message == null ? key : String.format(message, args);
     }

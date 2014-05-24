@@ -16,15 +16,24 @@ import java.util.List;
 @ManagedComponent(name = DatabaseAPI.NAME)
 public class DatabaseManager implements DatabaseAPI {
 
+    public static final String DRIVER = "org.postgresql.Driver";
     private Connection connection;
 
-    public DatabaseManager() throws Exception {
-        Class.forName("org.postgresql.Driver");
+    public DatabaseManager() {
+        try {
+            Class.forName(DRIVER);
+        } catch (ClassNotFoundException e) {
+            GuiExceptionHandler.handleCritical("Database driver not found : " + DRIVER);
+        }
+
+        String url = Config.getDbUrl();
+        String user = Config.getDbUser();
+        String pass = Config.getDbPass();
 
         try {
-            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/btc", "root", "root");
+            connection = DriverManager.getConnection(url, user, pass);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            GuiExceptionHandler.handleDbError(e);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.ssau.btc.model;
 
-import com.ssau.btc.sys.Messages;
+import com.ssau.btc.App;
+import com.ssau.btc.messages.Messages;
 
 /**
  * Author: Sergey42
@@ -15,6 +16,6 @@ public enum ActivationFunctionType {
 
     @Override
     public String toString() {
-        return Messages.get(name());
+        return App.context.getBean(Messages.class).getMessage(name());
     }
 }

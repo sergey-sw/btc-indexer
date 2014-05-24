@@ -750,9 +750,10 @@ public class AppFrame extends AppFrameCL {
             } else {
                 doubles = DemoValuesHelper.getSinusValues();
                 currentNetwork.initInputData(doubles);
-                teachCycleCnt = 10;
+                teachCycleCnt = Integer.valueOf(teachCycleCountTF.getText());
                 currentNetwork.setValue("teachCycleCount", teachCycleCnt);
-                currentNetwork.setSpeedRate(0.1);
+                speedRate = Double.valueOf(speedRateTF.getText());
+                currentNetwork.setSpeedRate(speedRate);
             }
 
             currentNetwork.teach();

@@ -1,6 +1,8 @@
 package com.ssau.btc.messages;
 
+import com.intelli.ray.core.Inject;
 import com.intelli.ray.core.ManagedComponent;
+import com.ssau.btc.utils.LocaleHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,10 +16,13 @@ import java.util.Properties;
 @ManagedComponent(name = "Messages")
 public class Messages {
 
+    @Inject
+    protected LocaleHelper localeHelper;
+
     protected Properties properties;
 
     public void init(String locale) {
-        String suffix = "_" + locale.toLowerCase();
+        String suffix = "_" + localeHelper.safeLang(locale).toLowerCase();
         InputStream stream = getClass().getResourceAsStream("messages" + suffix + ".properties");
         try {
             InputStreamReader reader = new InputStreamReader(stream, "UTF-8");

@@ -24,4 +24,15 @@ public class LocaleHelper {
     public String getEnglishLang() {
         return messages.getMessage("languageEN");
     }
+
+    public String safeLang(String lang) {
+        if (RU.equalsIgnoreCase(lang)) {
+            return RU;
+        } else if (EN.equalsIgnoreCase(lang)) {
+            return EN;
+        } else {
+            System.err.println("Attempt to set invalid locale : " + lang);
+            return RU;
+        }
+    }
 }

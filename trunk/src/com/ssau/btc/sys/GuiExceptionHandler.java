@@ -35,7 +35,8 @@ public class GuiExceptionHandler {
                     "User: %s\n" +
                     "Pass: %s\n" +
                     "Verify your connection settings",
-                    url, user, pass), "Warning", JOptionPane.WARNING_MESSAGE);
+                    url, user, pass), "Error", JOptionPane.WARNING_MESSAGE);
+            System.exit(0);
         }
     }
 

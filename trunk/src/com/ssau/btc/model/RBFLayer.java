@@ -2,14 +2,16 @@ package com.ssau.btc.model;
 
 import com.ssau.btc.sys.Config;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
  * Author: Sergey42
  * Date: 18.05.14 17:37
  */
-public class RBFLayer {
+public class RBFLayer implements Serializable {
 
+    private static final long serialVersionUID = -2620845044706356618L;
     public int size;
     public int dataLength;
     public double[] fuzzyInputs;
@@ -19,7 +21,7 @@ public class RBFLayer {
     public double[][] fuzzyBelongs;
     public double[] nData;
 
-    protected NetworkMediator networkMediator;
+    protected transient NetworkMediator networkMediator;
     private Random random = new Random();
 
     protected void init(NetworkMediator mediator) {

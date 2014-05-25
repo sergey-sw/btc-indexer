@@ -623,11 +623,15 @@ public class AppFrame extends AppFrameCL {
             FileOutputStream fos;
             ObjectOutputStream out;
             try {
-                fos = new FileOutputStream("D:\\net1.dat");
-                out = new ObjectOutputStream(fos);
-                out.writeObject(currentNetwork);
+                JFileChooser saveFileChooser = new JFileChooser();
+                if (saveFileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    fos = new FileOutputStream(saveFileChooser.getSelectedFile());
+                    out = new ObjectOutputStream(fos);
+                    out.writeObject(currentNetwork);
 
-                out.close();
+                    out.close();
+                    showMessage("", messages.getMessage("netSaved"), JOptionPane.INFORMATION_MESSAGE);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -845,6 +849,14 @@ public class AppFrame extends AppFrameCL {
                 showMessage(
                         messages.getMessage("error"),
                         messages.getMessage("error.maxDateTill"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+
+            if (!till.getTime().after(from.getTime())) {
+                showMessage(
+                        messages.getMessage("error"),
+                        messages.getMessage("error.fromAfterTill"),
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }

@@ -1,6 +1,7 @@
 package com.ssau.btc.model;
 
 import com.ssau.btc.utils.MathUtils;
+import com.ssau.btc.utils.MultiDimensionHelper;
 
 import java.util.List;
 
@@ -17,10 +18,16 @@ public class Network implements NetworkAPI {
     public int dataLength;
     public int window;
 
+    public double[] data2;
+    public double[] nData2;
+
     public int teachCycleCount;
 
     public double maxValue;
     public double minValue;
+
+    public double maxValue2;
+    public double minValue2;
 
     public NetState netState = NetState.NEW;
 
@@ -30,6 +37,7 @@ public class Network implements NetworkAPI {
     protected RBFLayer rbfLayer;
 
     protected boolean outputIsSigmoid;
+    protected boolean multiDimension;
 
     private NetworkMediator networkMediator = new NetworkMediator() {
 
@@ -50,6 +58,11 @@ public class Network implements NetworkAPI {
             mlp.dataLength = nData.length;
             rbfLayer.nData = nData;
             rbfLayer.dataLength = nData.length;
+
+            if (multiDimension) {
+                mlp.multiDimension = true;
+                mlp.nData2 = nData2;
+            }
         }
 
         @Override
@@ -95,20 +108,39 @@ public class Network implements NetworkAPI {
 
     @Override
     public double[] forecast(int forecastSize) {
-        double[] copyInput = new double[window];
-        System.arraycopy(nData, nData.length - window, copyInput, 0, window);
-
+        double[] inputs = new double[window];
         // Массив предсказанных значений
         double[] forecast = new double[forecastSize + window];
+        double[] approxNData2 = null;
 
-        // Первые {inputCount} точек массива прогноза равны исходным значениям
-        System.arraycopy(copyInput, 0, forecast, 0, window);
+        // Копируем последние значения исходных данных на вход сети
+        if (multiDimension) {
+            inputs = MultiDimensionHelper.mixSingle(nData, nData.length - window + 1, window - 1,
+                    nData2, nData2.length - window, inputs);
+        } else {
+            System.arraycopy(nData, nData.length - window, inputs, 0, window);
+        }
 
-        double[] inputs = new double[window];
-        // Начиная с позиции {Число нейронов входного слоя}
+        // Первые {window} точек массива прогноза равны исходным значениям
+        if (multiDimension) {
+            System.arraycopy(nData, nData.length - window + 1, forecast, 0, window - 1);
+        } else {
+            System.arraycopy(inputs, 0, forecast, 0, window);
+        }
+
+        if (multiDimension) {
+            approxNData2 = new double[window + forecastSize];
+            approxNData2 = MultiDimensionHelper.approxSecondDimension(approxNData2, nData2, window);
+        }
+
+        // Начиная с позиции {window}
         for (int j = window; j < forecastSize + window; j++) {
             // Задание входных значений нейронам входного слоя
-            System.arraycopy(forecast, j - window, inputs, 0, window);
+            if (multiDimension) {
+                inputs = MultiDimensionHelper.mixSingle(forecast, j - window, window - 1, approxNData2, j - window, inputs);
+            } else {
+                System.arraycopy(forecast, j - window, inputs, 0, window);
+            }
 
             // Вычисление выходного значения
             double[] outputs = networkMediator.calcNetOutput(inputs);
@@ -148,6 +180,33 @@ public class Network implements NetworkAPI {
         for (int i = 0; i < nData.length; i++) {
             nData[i] = normalize(this.data[i]);
         }
+        netState = NetState.DATA_INITED;
+        networkMediator.onDataInit();
+    }
+
+    @Override
+    public void initMultiDimensionData(double[] data1, double[] data2, double minData2, double maxData2) {
+        assert data1.length == data2.length;
+        multiDimension = true;
+
+        dataLength = data1.length;
+        this.data = data1;
+        this.data2 = data2;
+
+        maxValue = MathUtils.findMax(this.data);
+        minValue = MathUtils.findMin(this.data);
+
+        minValue2 = minData2;
+        maxValue2 = maxData2;
+
+        /* init normalized data */
+        nData = new double[this.data.length];
+        nData2 = new double[this.data2.length];
+        for (int i = 0; i < nData.length; i++) {
+            nData[i] = normalize(this.data[i]);
+            nData2[i] = MathUtils.normalize(this.data2[i], minData2, maxData2);
+        }
+
         netState = NetState.DATA_INITED;
         networkMediator.onDataInit();
     }

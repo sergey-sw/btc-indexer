@@ -3,11 +3,13 @@ package com.ssau.btc.sys;
 import com.intelli.ray.core.ManagedComponent;
 import com.ssau.btc.model.IndexSnapshot;
 import com.ssau.btc.utils.DateUtils;
+import com.ssau.btc.utils.MathUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Sergey42
@@ -40,9 +42,8 @@ public class DatabaseManager implements DatabaseAPI {
     @Override
     public List<IndexSnapshot> getDailyIndexes() {
         List<IndexSnapshot> indexSnapshots = new ArrayList<>();
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "select index_date, index_value from daily_index order by index_date");
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT index_date, index_value FROM daily_index ORDER BY index_date")) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Date date = resultSet.getDate("index_date");
@@ -72,8 +73,7 @@ public class DatabaseManager implements DatabaseAPI {
             }
         }
 
-        try {
-            PreparedStatement statement = connection.prepareStatement(query.toString());
+        try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
             statement.execute();
         } catch (SQLException e) {
             ExceptionHandler.handle(e);
@@ -98,8 +98,7 @@ public class DatabaseManager implements DatabaseAPI {
         }
         query.append(")");
 
-        try {
-            PreparedStatement statement = connection.prepareStatement(query.toString());
+        try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
             statement.executeUpdate();
         } catch (SQLException e) {
             ExceptionHandler.handle(e);
@@ -107,12 +106,87 @@ public class DatabaseManager implements DatabaseAPI {
     }
 
     @Override
-    public String getConfig(String name) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    String.format("select config_value from sys_config where name = '%s'", name));
-            ResultSet resultSet = statement.executeQuery();
+    public boolean storeTotalBtc(Map<java.util.Date, Integer> values) {
+        if (values.isEmpty()) {
+            return false;
+        }
 
+        StringBuilder query = new StringBuilder("insert into total_btc values ");
+        Iterator<Map.Entry<java.util.Date, Integer>> iterator = values.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<java.util.Date, Integer> entry = iterator.next();
+            query.append("(").append(DateUtils.formatSQL(entry.getKey())).append(",").append(entry.getValue()).append(")");
+
+            if (iterator.hasNext()) {
+                query.append(",");
+            }
+        }
+
+        try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
+            statement.execute();
+            return true;
+        } catch (SQLException e) {
+            ExceptionHandler.handle(e);
+            return false;
+        }
+    }
+
+    @Override
+    public java.util.Date getLastDateInTotalBtc() {
+        String query = "SELECT max(date_) FROM total_btc";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                java.util.Date date = resultSet.getDate(1);
+                return date;
+            } else {
+                throw new RuntimeException("No info about total_btc");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("No info about total_btc");
+        }
+    }
+
+    @Override
+    public void storeSingleTotalBtc(java.util.Date date, Integer value) {
+        String getQuery = "select * from total_btc where date_ = " + DateUtils.formatSQL(date);
+        try (PreparedStatement statement = connection.prepareStatement(getQuery)) {
+            ResultSet resultSet = statement.executeQuery();
+            if (!resultSet.next()) {
+                String query = String.format("insert into total_btc values (%s," + value + ")", DateUtils.formatSQL(date));
+                try {
+                    PreparedStatement statement1 = connection.prepareStatement(query);
+                    statement1.execute();
+                } catch (SQLException e) {
+                    ExceptionHandler.handle(e);
+                }
+            }
+        } catch (SQLException e) {
+            ExceptionHandler.handle(e);
+        }
+    }
+
+    @Override
+    public double[] loadTotalBtcByPeriod(java.util.Date date1, java.util.Date date2) {
+        String query = String.format("select value_ from total_btc where date_ >= %s and date_ <= %s",
+                DateUtils.formatSQL(date1), DateUtils.formatSQL(date2));
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            ResultSet resultSet = statement.executeQuery();
+            List<Double> doubles = new ArrayList<>();
+            while (resultSet.next()) {
+                doubles.add(resultSet.getDouble(1));
+            }
+            return MathUtils.convertDoubles(doubles);
+        } catch (SQLException e) {
+            throw new RuntimeException(String.format("Failed to select total btc for period %s-%s", date1, date2));
+        }
+    }
+
+    @Override
+    public String getConfig(String name) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                String.format("select config_value from sys_config where name = '%s'", name))) {
+            ResultSet resultSet = statement.executeQuery();
             return resultSet.next() ? resultSet.getString("config_value") : null;
         } catch (SQLException e) {
             ExceptionHandler.handle(e);
@@ -125,17 +199,15 @@ public class DatabaseManager implements DatabaseAPI {
         String config = getConfig(name);
 
         if (config != null && !config.isEmpty()) {
-            try {
-                PreparedStatement statement = connection.prepareStatement(
-                        String.format("update sys_config set config_value = '%s' where name = '%s'", value, name));
+            try (PreparedStatement statement = connection.prepareStatement(
+                    String.format("update sys_config set config_value = '%s' where name = '%s'", value, name))) {
                 statement.executeUpdate();
             } catch (SQLException e) {
                 ExceptionHandler.handle(e);
             }
         } else {
-            try {
-                PreparedStatement statement = connection.prepareStatement(
-                        "insert into sys_config values ('" + name + "','" + value + "')");
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "insert into sys_config values ('" + name + "','" + value + "')")) {
                 statement.execute();
             } catch (SQLException e) {
                 ExceptionHandler.handle(e);

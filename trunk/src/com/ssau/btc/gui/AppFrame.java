@@ -50,6 +50,8 @@ public class AppFrame extends AppFrameCL {
     protected DataSupplier dataSupplier;
     @Inject
     protected LocaleHelper localeHelper;
+    @Inject
+    protected TotalBtcWorker totalBtcWorker;
 
     protected NetworkAPI currentNetwork;
 
@@ -172,7 +174,7 @@ public class AppFrame extends AppFrameCL {
             @Override
             public void run() {
                 Collection<IndexSnapshot> indexSnapshots = webDataLoader.load24HourIndexes(SnapshotMode.CLOSING_PRICE);
-                infoPriceTimeSeriesCollection = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour");
+                infoPriceTimeSeriesCollection = ChartHelper.createTimeDataSet(indexSnapshots, "btc24Hour", Interval.MINUTE);
                 priceInfoChart = ChartHelper.createTimeChart(infoPriceTimeSeriesCollection,
                         messages.getMessage("btc24Hour"),
                         messages.getMessage("btc24HourX"),
@@ -443,12 +445,13 @@ public class AppFrame extends AppFrameCL {
     }
 
     protected void addMistakeTab() {
-        if (jTabbedPane.getTabCount() == 3) {  //TODO not cool
+        if (jTabbedPane.getTabCount() == 4) {  //TODO not cool
             jTabbedPane.removeTabAt(2);
         }
 
         mistakeTabMainPanel = new JPanel(SIMPLE_FLOW_LAYOUT);
-        jTabbedPane.addTab(messages.getMessage("mistakesTab"), mistakeTabMainPanel);
+        mistakeTabMainPanel.setName(messages.getMessage("mistakesTab"));
+        jTabbedPane.add(mistakeTabMainPanel, 2);
 
         JPanel mistakeTabVPanel = new JPanel();
         BoxLayout mistakeTabVPanelLayout = new BoxLayout(mistakeTabVPanel, BoxLayout.Y_AXIS);
@@ -528,13 +531,13 @@ public class AppFrame extends AppFrameCL {
         @Override
         public void actionPerformed(ActionEvent e) {
             int size = structureTableModel.items.size();
-            for (int i = size - 1; i > 0; i--) {
+            for (int i = size - 1; i >= 0; i--) {
                 structureTableModel.removeItem(i);
             }
 
             List<LayerInfo> layerInfoList = Config.getDefaultStructure();
-            for (int i = 1; i < layerInfoList.size(); i++) {
-                structureTableModel.addItem(layerInfoList.get(i));
+            for (LayerInfo aLayerInfoList : layerInfoList) {
+                structureTableModel.addItem(aLayerInfoList);
             }
 
             addLayerBtn.setEnabled(true);
@@ -577,7 +580,8 @@ public class AppFrame extends AppFrameCL {
             }
 
             infoPriceTimeSeriesCollection.removeAllSeries();
-            infoPriceTimeSeriesCollection.addSeries(ChartHelper.createTimeSeries(indexSnapshots, "btcInfo"));
+            infoPriceTimeSeriesCollection.addSeries(ChartHelper.createTimeSeries(
+                    indexSnapshots, "btcInfo", mode == DAY ? Interval.MINUTE : Interval.HOUR));
 
             dayModeBtn.setEnabled(mode != DAY);
             monthModeBtn.setEnabled(mode != MONTH);
@@ -606,6 +610,9 @@ public class AppFrame extends AppFrameCL {
             networkTabChartsRightVPanel.setVisible(false);
             networkTabMistakesPanel.removeAll();
             networkTabIndexSnapshotsPanel.removeAll();
+            if (jTabbedPane.getTabCount() == 4) {  //TODO not cool
+                jTabbedPane.removeTabAt(2);
+            }
         }
     }
 
@@ -736,17 +743,24 @@ public class AppFrame extends AppFrameCL {
             Collection<IndexSnapshot> snapshots = null;
             double[] doubles;
 
-            if (!Config.USE_DEMO_FUNCTION && !validate()) {
+            if (!Config.useDemo() && !validate()) {
                 return;
             }
 
             networkTabChartsRightVPanel.setVisible(true);
-            if (!Config.USE_DEMO_FUNCTION) {
+            if (!Config.useDemo()) {
                 snapshots = dataSupplier.getIndexSnapshots(from.getTime(), till.getTime(), SnapshotMode.CLOSING_PRICE);
                 doubles = IndexSnapshotUtils.parseClosingPrice(snapshots);
-                currentNetwork.initInputData(doubles);
+                if (Config.getUseTotalBtc()) {
+                    double[] totalBtc = totalBtcWorker.getByPeriod(from.getTime(), till.getTime());
+                    currentNetwork.initMultiDimensionData(doubles, totalBtc, 0, Config.TOTAL_BTC);
+                } else {
+                    currentNetwork.initInputData(doubles);
+                }
                 currentNetwork.setValue("teachCycleCount", teachCycleCnt);
                 currentNetwork.setSpeedRate(speedRate);
+                //currentNetwork.setValue("maxValue", 2000.0);
+                //currentNetwork.setValue("minValue", 0.0);
             } else {
                 doubles = DemoValuesHelper.getSinusValues();
                 currentNetwork.initInputData(doubles);
@@ -774,14 +788,14 @@ public class AppFrame extends AppFrameCL {
             networkTabMistakesPanel.add(mistakeChartPanel);
 
             JFreeChart valuesChart;
-            if (!Config.USE_DEMO_FUNCTION) {
-                networkDataSet = ChartHelper.createTimeDataSet(snapshots, "btcIndex");
+            if (!Config.useDemo()) {
+                networkDataSet = ChartHelper.createTimeDataSet(snapshots, "btcIndex", Interval.HOUR);
                 valuesChart = ChartHelper.createTimeChart(networkDataSet,
                         messages.getMessage("btcIndex"),
                         messages.getMessage("btcIndexX"),
                         messages.getMessage("btcIndexY"));
             } else {
-                networkDataSet = ChartHelper.createXYSeriesCollection(doubles, 0, Config.DEMO_FUNCTION_STEP);
+                networkDataSet = ChartHelper.createXYSeriesCollection(doubles, 0, Config.getDemoStep());
                 valuesChart = ChartHelper.createDoublesChart(networkDataSet, "Demo function", "X", "Y");
             }
 
@@ -790,7 +804,7 @@ public class AppFrame extends AppFrameCL {
 
             networkTabIndexSnapshotsPanel.add(valuesChartPanel);
 
-            if (!Config.USE_DEMO_FUNCTION) {
+            if (!Config.useDemo()) {
                 forecastDateTF.setText(DateUtils.format(till.getTime()));
             }
             forecastPanelOuter.setVisible(true);
@@ -886,13 +900,13 @@ public class AppFrame extends AppFrameCL {
             if (validate()) {
                 double[] forecast = currentNetwork.forecast(forecastSize);
 
-                if (!Config.USE_DEMO_FUNCTION) {
+                if (!Config.useDemo()) {
                     List<IndexSnapshot> snapshots = IndexSnapshotUtils.convertToSnapshots(
                             forecast, DateUtils.getDate(forecastDateTF.getText()), Interval.DAY);
-                    ((TimeSeriesCollection) networkDataSet).addSeries(ChartHelper.createTimeSeries(snapshots, "Forecast"));
+                    ((TimeSeriesCollection) networkDataSet).addSeries(ChartHelper.createTimeSeries(snapshots, "Forecast", Interval.HOUR));
                 } else {
-                    double xLast = Config.DEMO_FUNCTION_STEP * Config.DEMO_FUNCTION_SIZE;
-                    ((XYSeriesCollection) networkDataSet).addSeries(ChartHelper.createXYSeries(forecast, xLast, Config.DEMO_FUNCTION_STEP));
+                    double xLast = Config.getDemoStep() * Config.getDemoSize();
+                    ((XYSeriesCollection) networkDataSet).addSeries(ChartHelper.createXYSeries(forecast, xLast, Config.getDemoStep()));
                 }
             }
         }

@@ -5,6 +5,7 @@ import com.ssau.btc.gui.AppFrame;
 import com.ssau.btc.messages.Messages;
 import com.ssau.btc.sys.Config;
 import com.ssau.btc.sys.Synchronizer;
+import com.ssau.btc.sys.TotalBtcWorker;
 
 import java.io.IOException;
 
@@ -24,6 +25,10 @@ public class App {
         } catch (IOException e) {
             System.out.println("Could not print beans");
         }
+
+        TotalBtcWorker totalBtcWorker = context.getBean(TotalBtcWorker.NAME);
+        totalBtcWorker.init();
+
         Synchronizer synchronizer = context.getBean(Synchronizer.class);
         synchronizer.initTimer();
 

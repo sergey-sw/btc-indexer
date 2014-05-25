@@ -2,14 +2,17 @@ package com.ssau.btc.model;
 
 import com.ssau.btc.utils.MultiDimensionHelper;
 
+import java.io.Serializable;
+
 /**
  * Multi layer perceptron
  * <p/>
  * Author: Sergey42
  * Date: 18.05.14 16:54
  */
-public class MLP {
+public class MLP implements Serializable {
 
+    private static final long serialVersionUID = 6033796215864382849L;
     public double[] nData;
     public double[] nData2;
     public int dataLength;
@@ -35,7 +38,7 @@ public class MLP {
     public double speedRate;
 
     public boolean multiDimension;
-    protected NetworkMediator networkMediator;
+    protected transient NetworkMediator networkMediator;
 
     protected void init(NetworkMediator mediator) {
         networkMediator = mediator;

@@ -1,6 +1,6 @@
 CREATE TABLE daily_index
 (
-  index_date  DATE NOT NULL,
+  index_date  TIMESTAMP NOT NULL,
   index_value NUMERIC(10, 4),
   PRIMARY KEY (index_date)
 );

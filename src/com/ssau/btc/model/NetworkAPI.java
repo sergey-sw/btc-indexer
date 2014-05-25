@@ -14,6 +14,8 @@ public interface NetworkAPI extends Serializable {
 
     void initInputData(double[] data);
 
+    void initMultiDimensionData(double[] data1, double[] data2, double minData2, double maxData2);
+
     void setValue(String name, Object value);
 
     <T> T getValue(String name);

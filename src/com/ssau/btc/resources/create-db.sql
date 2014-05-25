@@ -5,6 +5,13 @@ CREATE TABLE daily_index
   PRIMARY KEY (index_date)
 );
 
+CREATE TABLE total_btc
+(
+  date_  DATE NOT NULL,
+  value_ INTEGER,
+  PRIMARY KEY (date_)
+);
+
 CREATE TABLE sys_config
 (
   name         VARCHAR(50),

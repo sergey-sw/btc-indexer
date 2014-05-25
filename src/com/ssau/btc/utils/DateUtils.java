@@ -17,6 +17,7 @@ public class DateUtils {
     protected static final DateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     protected static final DateFormat hourFormat = new SimpleDateFormat("yyyy-MM-dd HH");
     protected static final DateFormat minuteFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    protected static final DateFormat totalBtcDataFormat = new SimpleDateFormat("dd/MM/yyyy");
 
     public static final int COIN_DESC_HOUR_DIFFERENCE = 4; //todo conf
     public static final String COIN_DESC_TZ = "Etc/GMT+1";
@@ -75,5 +76,27 @@ public class DateUtils {
         return instance.getTime();
     }
 
+    public static Date getTotalBtcDate(String str) {
+        try {
+            return totalBtcDataFormat.parse(str);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
 
+    public static int calcApproxDayDifference(Date d1, Date d2) {
+        if (d1.after(d2)) {
+            throw new IllegalStateException("Date d2 must be after d1");
+        }
+
+        if (d1.getYear() == d2.getYear()) {
+            if (d1.getMonth() == d2.getMonth()) {
+                return d2.getDate() - d1.getDate();
+            } else {
+                return (d2.getMonth() - d1.getMonth()) * 30 + d2.getDate() - d1.getDate();
+            }
+        } else {
+            return (d2.getYear() - d1.getYear()) * 356 + d2.getMonth() * 30 - d1.getMonth() * 30;
+        }
+    }
 }

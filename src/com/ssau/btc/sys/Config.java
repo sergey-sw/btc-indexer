@@ -61,17 +61,15 @@ public class Config {
 
     public static final String DIRECTORY = "D:\\";
 
-    public static boolean USE_DEMO_FUNCTION = true;
-    public static int DEMO_FUNCTION_SIZE = 314 * 4 / 20;
-    public static double DEMO_FUNCTION_STEP = 0.2;
-
     public static int CMEANS_MAX_ITERATIONS = 20;
     public static double CMEANS_ERROR_BARRIER = 0.001;
+
+    public static final int TOTAL_BTC = 21_000_000;
 
     public static List<LayerInfo> getDefaultStructure() {
         List<LayerInfo> items = new ArrayList<>();
         items.add(new LayerInfo(8, null, 0));
-        items.add(new LayerInfo(16, ActivationFunctionType.R_SIGMOID, 0.75));
+        items.add(new LayerInfo(16, ActivationFunctionType.R_SIGMOID, 0.15));
         items.add(new LayerInfo(1, ActivationFunctionType.SINUS, 0.85));
         return items;
     }
@@ -110,5 +108,38 @@ public class Config {
 
     public static void setDbPass(String pass) {
         instance.properties.setProperty(ConfigKeys.DB_PASS, pass);
+    }
+
+    public static boolean useDemo() {
+        return Boolean.valueOf(instance.properties.getProperty(ConfigKeys.USE_DEMO));
+    }
+
+    public static double getDemoStep() {
+        try {
+            return Double.valueOf(instance.properties.getProperty(ConfigKeys.DEMO_STEP));
+        } catch (NumberFormatException e) {
+            return 0.1;
+        }
+    }
+
+    public static int getDemoSize() {
+        try {
+            return Integer.valueOf(instance.properties.getProperty(ConfigKeys.DEMO_SIZE));
+        } catch (NumberFormatException e) {
+            return 314 * 4 / 10;
+        }
+    }
+
+    public static int get24HourIndexInterval() {
+        try {
+            Integer i = Integer.valueOf(instance.properties.getProperty(ConfigKeys.INDEX_24_HOUR_INTERVAL));
+            return i > 1 && i < 60 ? i : 10;
+        } catch (NumberFormatException e) {
+            return 10;
+        }
+    }
+
+    public static boolean getUseTotalBtc() {
+        return Boolean.valueOf(instance.properties.getProperty(ConfigKeys.USE_TOTAL_BTC));
     }
 }

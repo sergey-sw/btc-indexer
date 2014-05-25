@@ -116,6 +116,8 @@ public class WebDataLoader implements WebLoaderAPI {
 
         List<IndexSnapshot> indexSnapshots = new ArrayList<>();
 
+        int index24HourInterval = Config.get24HourIndexInterval();
+
         for (int i = 1; i < lines.size() - 3; i++) {
             String line = lines.get(i);
 
@@ -127,7 +129,7 @@ public class WebDataLoader implements WebLoaderAPI {
             }
 
             String minute = line.substring(15, 17);
-            if (!"00".equals(minute)) {
+            if (Integer.valueOf(minute) % index24HourInterval != 0) {
                 continue;
             }
 
@@ -200,7 +202,7 @@ public class WebDataLoader implements WebLoaderAPI {
     }
 
     @SuppressWarnings("unchecked")
-    protected List<String> loadList(String url) {
+    public List<String> loadList(String url) {
         try {
             HttpGet httpGet = new HttpGet(url);
             HttpClient httpClient = new DefaultHttpClient();

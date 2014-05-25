@@ -1,15 +1,13 @@
 package com.ssau.btc.utils;
 
 import com.ssau.btc.model.IndexSnapshot;
+import com.ssau.btc.model.Interval;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
-import org.jfree.data.time.Hour;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.time.TimeSeriesDataItem;
+import org.jfree.data.time.*;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -53,16 +51,24 @@ public class ChartHelper {
         return xySeries;
     }
 
-    public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots, String seriesName) {
-        return new TimeSeriesCollection(createTimeSeries(indexSnapshots, seriesName));
+    public static TimeSeriesCollection createTimeDataSet(Collection<IndexSnapshot> indexSnapshots, String seriesName, Interval interval) {
+        return new TimeSeriesCollection(createTimeSeries(indexSnapshots, seriesName, interval));
     }
 
-    public static TimeSeries createTimeSeries(Collection<IndexSnapshot> indexSnapshots, String seriesName) {
+    public static TimeSeries createTimeSeries(Collection<IndexSnapshot> indexSnapshots, String seriesName, Interval interval) {
         TimeSeries timeSeries = new TimeSeries(seriesName);
 
-        for (IndexSnapshot indexSnapshot : indexSnapshots) {
-            timeSeries.add(new TimeSeriesDataItem(new Hour(indexSnapshot.date), indexSnapshot.value));
+        if (interval == Interval.MINUTE) {
+            for (IndexSnapshot indexSnapshot : indexSnapshots) {
+                timeSeries.add(new TimeSeriesDataItem(new Minute(indexSnapshot.date), indexSnapshot.value));
+            }
+        } else {
+            for (IndexSnapshot indexSnapshot : indexSnapshots) {
+                timeSeries.add(new TimeSeriesDataItem(new Hour(indexSnapshot.date), indexSnapshot.value));
+            }
         }
+
+
         return timeSeries;
     }
 

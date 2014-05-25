@@ -1,5 +1,7 @@
 package com.ssau.btc.model;
 
+import com.ssau.btc.utils.MultiDimensionHelper;
+
 /**
  * Multi layer perceptron
  * <p/>
@@ -9,6 +11,7 @@ package com.ssau.btc.model;
 public class MLP {
 
     public double[] nData;
+    public double[] nData2;
     public int dataLength;
     public int inputWindow;
     public int outputWindow;
@@ -31,6 +34,7 @@ public class MLP {
     public double[][] weightChangeHistory;
     public double speedRate;
 
+    public boolean multiDimension;
     protected NetworkMediator networkMediator;
 
     protected void init(NetworkMediator mediator) {
@@ -100,7 +104,12 @@ public class MLP {
 
         while (iterationNumber < dataLength - inputWindow - outputWindow) {
             // Копируем участок выборки на вход сети
-            System.arraycopy(nData, iterationNumber, inputs, 0, inputWindow);
+            //System.arraycopy(nData, iterationNumber, inputs, 0, inputWindow);
+            if (multiDimension) {
+                inputs = MultiDimensionHelper.mixSingle(nData, iterationNumber, inputWindow - 1, nData2, iterationNumber, inputs);
+            } else {
+                System.arraycopy(nData, iterationNumber, inputs, 0, inputWindow);
+            }
 
             // Вычисление выходного сигнала при текущих весах и входных данных
             double outputs[] = networkMediator.calcNetOutput(inputs);
@@ -112,7 +121,11 @@ public class MLP {
                 }
             }
 
-            System.arraycopy(nData, iterationNumber + inputWindow, expected, 0, outputWindow);
+            if (multiDimension) {
+                System.arraycopy(nData, iterationNumber + inputWindow - 1, expected, 0, outputWindow);
+            } else {
+                System.arraycopy(nData, iterationNumber + inputWindow, expected, 0, outputWindow);
+            }
             // Вычисление величины несоответствия
             double difference = calcDifference(expected, outputs);
 
@@ -193,8 +206,8 @@ public class MLP {
         weightChangeHistory = new double[teachCycleCount][];
 
         for (int i = 0; i < differenceHistory.length; i++) {
-            differenceHistory[i] = new double[dataLength];
-            outputsHistory[i] = new double[dataLength];
+            differenceHistory[i] = new double[dataLength - outputWindow];
+            outputsHistory[i] = new double[dataLength - outputWindow];
             weightChangeHistory[i] = new double[dataLength - inputWindow - outputWindow];
         }
         averageDiffPerEraHistory = new double[teachCycleCount];
